@@ -273,6 +273,7 @@ void display()
 		
 		//markAt(points, pointnum);
 		//markAt(moonpoints, moonpnum);
+		rotation =360 * ((float)(clockcurrent%10000000))/10000000;
 		
 		if(drawbezier)
 		{
@@ -281,7 +282,7 @@ void display()
 				glUseProgram(0);
 		
 				//glTranslatef(-3, 1, 0);
-				rotation =360 * ((float)(clockcurrent%10000000))/10000000;
+				
 				//printf("%f\n",rotation);
 				glRotatef(rotation, 1, 0, 0);
 				glTranslatef(0.0f,0.0f,-10.0f);
@@ -323,8 +324,8 @@ void display()
 		
 		glPushMatrix();
 		
-		glTranslatef(0,0,-20);
-		glRotatef(30, 0,0,1);
+		glTranslatef(0,sinf(rotation/1.5),-20);
+		glRotatef(rotation*4, 0,0,1);
 		
 		glUniform3f(lv3mycolor,0.9,0.2,0.6);
 		
