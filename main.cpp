@@ -384,6 +384,28 @@ void display()
 		glPopMatrix();
 		
 		
+		
+		glPushMatrix();
+		
+		glTranslatef(10,0,-30);
+		glRotatef(-85, 0,1,0);
+		glScalef(40,1,1);
+		glUniform3f(lv3mycolor,1,1,1);
+		glUniform1f(lfmypow,2);
+		
+		glBegin(GL_QUADS);
+		
+		for( i=0;i<4;i++)
+		{
+				glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
+		}
+		
+		glEnd();
+		
+		glPopMatrix();
+		
+		
+		
 		//markAt3(start);
 		//markAt3(end);
 		//markAt3(dir);
@@ -442,7 +464,7 @@ void initialize ()
 		//gluLookAt(0, 0, 0, 0, 0, 100, 0, 1, 0);
 		glShadeModel( GL_SMOOTH );
 		glClearDepth( 1.0f );														// specify the clear value for the depth buffer
-		glEnable( GL_DEPTH_TEST );
+																					//glEnable( GL_DEPTH_TEST );
 		glDepthFunc( GL_LEQUAL );
 		glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );						// specify implementation-specific hints
 		glClearColor(0.0, 0.0, 0.0, 1.0);											// specify clear values for the color buffers
