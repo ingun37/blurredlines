@@ -3,6 +3,7 @@ uniform vec3 start;
 uniform vec3 dir;
 uniform float dist;
 uniform vec3 mycolor;
+uniform float mypow;
 void main()
 {
 //	gl_FragColor = gl_Color;
@@ -24,6 +25,6 @@ void main()
 		
 	gl_FragColor = vec4(mycolor.x,mycolor.y,
 		mycolor.z
-		,(((dist-ftmp)*(dist-ftmp))/(dist*dist)));
+		,(pow(dist-ftmp,mypow)/pow(dist*dist,mypow)));
 }
 

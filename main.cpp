@@ -48,7 +48,7 @@ static GLuint shaderV;
 static GLuint shaderF;
 
 
-static GLint lv3start, lv3dir, lfdist, lv3mycolor;
+static GLint lv3start, lv3dir, lfdist, lv3mycolor, lfmypow;
 
 void markAt(p2d *arr, unsigned int num)
 {
@@ -328,6 +328,7 @@ void display()
 		glRotatef(rotation*4, 0,0,1);
 		
 		glUniform3f(lv3mycolor,0.9,0.2,0.6);
+		glUniform1f(lfmypow,2+sinf(rotation*3.2));
 		
 		glBegin(GL_QUADS);
 		
@@ -344,9 +345,11 @@ void display()
 		
 		glPushMatrix();
 		
-		glTranslatef(0,0,-20);
-
-		glUniform3f(lv3mycolor,0.1,0.9,0.6);
+		glTranslatef(sinf(rotation*0.5),sinf(rotation*1.2),-20);
+		glRotatef(sinf(rotation*1.4)*40, 0,0,1);
+		
+		glUniform3f(lv3mycolor,0.1,0.9,0.4);
+		glUniform1f(lfmypow,2+sinf(rotation*5));
 		
 		glBegin(GL_QUADS);
 		
@@ -359,6 +362,26 @@ void display()
 		
 		glPopMatrix();
 		
+		
+		
+		glPushMatrix();
+		
+		glTranslatef(1.6*sinf(rotation*1.3),2*sinf(rotation*2),-20);
+		glRotatef(-sinf(rotation*0.2)*720, 0,0,1);
+		
+		glUniform3f(lv3mycolor,0.3,0.2,0.6);
+		glUniform1f(lfmypow,2+sinf(rotation*5));
+		
+		glBegin(GL_QUADS);
+		
+		for( i=0;i<4;i++)
+		{
+				glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
+		}
+		
+		glEnd();
+		
+		glPopMatrix();
 		
 		
 		//markAt3(start);
@@ -527,6 +550,7 @@ void initialize ()
 		lv3start = glGetUniformLocation( shaderprogram,"start");
 		lv3dir = glGetUniformLocation( shaderprogram,"dir");
 		lfdist = glGetUniformLocation( shaderprogram,"dist");
+		lfmypow = glGetUniformLocation( shaderprogram, "mypow");
 		
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
