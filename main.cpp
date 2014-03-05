@@ -1,4 +1,4 @@
-
+//#define renderBezier
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +9,7 @@
 #include <math.h>
 #include <time.h>
 #include "vertex.h"
+#include "myshader.h"
 
 #define KEY_ESCAPE 27
 #define PI 3.141592
@@ -50,6 +51,13 @@ static GLuint shaderF;
 
 static GLint lv3start, lv3dir, lfdist, lv3mycolor, lfmypow;
 
+
+static p3d *spherepoints;
+static GLuint shaderShading;
+static int* sphereindices;
+static const unsigned int sphereSmoothness = 14;
+static const float sphereradius = 3.0f;
+#define spherePointnum(S) (2 + S*((2*S) + 2))
 void markAt(p2d *arr, unsigned int num)
 {
 		int i;
@@ -139,6 +147,7 @@ void update()
 		int tmp = -1;
 		float tmpf;
 		p2d tmpp, tmpp2;
+#ifdef renderBezier
 		for (i=0;i<exlinesnum;i++)
 		{
 				exlines[i] = copyp2darr(points, pointnum);
@@ -196,7 +205,7 @@ void update()
 				sunpoints[i] = tmpp;
 				
 		}
-		
+#endif
 		
 		p3d start;
 		p3d end;
@@ -231,6 +240,7 @@ void update()
 
 void drawfinish()
 {
+#ifdef renderBezier
 		int i;
 		for(i=0;i<exlinesnum;i++)
 		{
@@ -243,7 +253,7 @@ void drawfinish()
 		{
 				releasep2darr(moonexlines[i], moonpnum);
 		}
-		
+#endif
 		
 		
 		//releasep2darr(moonpoints, moonpnum);
@@ -275,8 +285,8 @@ void display()
 		//markAt(moonpoints, moonpnum);
 		rotation =360 * ((float)(clockcurrent%10000000))/10000000;
 		
-		if(drawbezier)
-		{
+#ifdef renderBezier
+
 				glPushMatrix();
 
 				glUseProgram(0);
@@ -315,7 +325,7 @@ void display()
 				for(i=0;i<exlinesnum;i++)
 						drawBezier(exlines[i], pointnum, beziersmoothness);
 
-		}
+#endif
 		glUseProgram(shaderprogram);
 		
 
@@ -404,6 +414,15 @@ void display()
 		
 		glPopMatrix();
 		
+		glPushMatrix();
+		glTranslatef(0,0,-28.0f);
+		glRotatef(45,1,0,0);
+		glRotatef(sinf(rotation*0.5)*260,0,1,0);
+		for(i=0;i<spherePointnum(sphereSmoothness);i++)
+		{
+				markAt3(spherepoints[i]);
+		}
+		glPopMatrix();
 		
 		
 		//markAt3(start);
@@ -412,35 +431,10 @@ void display()
 		glutSwapBuffers();
 		drawfinish();
 }
-char* getshadersourcefromfile(char* path,unsigned int* plen)
-{
-		FILE* fsource = fopen(path,"r");
-		char c;
-		unsigned int len=0;
-		char* source, *pc;
-
-		while((c=getc(fsource))!=EOF)
-		{
-				len++;
-		}
-		len++;
-		source = (char*)malloc(sizeof(char)*len);
-		pc = source;
-		fseek(fsource,0,SEEK_SET);
-		while((c=getc(fsource))!=EOF)
-		{
-				*(pc++)=c;
-		}
-		*pc = '\0';
-		if(plen) *plen = len;
-		
-		return source;
-		fclose(fsource);
-}
 
 void initialize ()
 {
-		int i;
+		int i, j;
 		float angle=(30.f/360)*2*(3.141592);
 		float range = 8;
 
@@ -468,7 +462,7 @@ void initialize ()
 		glDepthFunc( GL_LEQUAL );
 		glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );						// specify implementation-specific hints
 		glClearColor(0.0, 0.0, 0.0, 1.0);											// specify clear values for the color buffers
-
+#ifdef renderBezier
 		points = (p2d*)malloc(sizeof(p2d)*pointnum);
 		
 		for (i=0; i<pointnum; i++)
@@ -507,7 +501,7 @@ void initialize ()
 		}
 		
 		sunexlines = (p2d**)malloc(sizeof(p2d*)*sunexlinesnum);
-		
+#endif
 		glowingline = (p3d*)malloc(sizeof(p3d)*4);
 		
 		
@@ -515,54 +509,8 @@ void initialize ()
 		glowingline[1] = createp3d(-30, 2, -0);
 		glowingline[2] = createp3d(30, 2, -0);
 		glowingline[3] = createp3d(30, -2, -0);
-		
-		shaderV = glCreateShader(GL_VERTEX_SHADER);
-		shaderF = glCreateShader(GL_FRAGMENT_SHADER);
-		printf("%d shader V\n",shaderV);
-
-
-
-		char* source;
-		char** sources;
-		char log[1024]={0,};
-		GLint result;
-
-		sources = (char**)malloc(sizeof(char*)*1);
-		
-		source = getshadersourcefromfile("vert.vert",NULL);
-		printf("%s\n",source);
-		sources[0] = source;
-		glShaderSource(shaderV, 1,(const char**)sources,NULL);
-		puts("shadersource complete");
-		glCompileShader(shaderV);
-		puts("compile complete");
-		glGetShaderiv(shaderV,GL_COMPILE_STATUS,&result);
-		if(result != GL_TRUE)
-		{
-				puts("compile error");
-				exit(1);
-		}
-		free(source);
-		
-		source = getshadersourcefromfile("frag.frag",NULL);
-		printf("%s\n",source);
-		sources[0] = source;
-		glShaderSource(shaderF,1,(const char**)sources,NULL);
-		puts("shadersourcecomplete");
-		glCompileShader(shaderF);
-		puts("compile complete");
-		glGetShaderiv(shaderF,GL_COMPILE_STATUS,&result);
-		if(result != GL_TRUE)
-		{
-				
-				puts("compile error");
-				glGetShaderInfoLog(shaderF, 1024, NULL, log);
-				printf("%s\n",log);
-				exit(1);
-		}
-		free(source);
-		free(sources);
-		
+		shaderV = makeVertexShader("vert.vert",NULL);
+		shaderF = makeFragmentShader("frag.frag",NULL);
 		
 		shaderprogram = glCreateProgram();
 		glAttachShader(shaderprogram,shaderV);
@@ -576,6 +524,23 @@ void initialize ()
 		
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
+		
+		unsigned int pnum = spherePointnum(sphereSmoothness);
+		float tmpradius, tmpangle, tmpheight;
+		spherepoints = (p3d*)malloc(sizeof(p3d)*pnum);
+		spherepoints[0] = createp3d(0,sphereradius,0);
+		spherepoints[pnum-1] = createp3d(0,-sphereradius,0);
+		tmpangle = PI/(sphereSmoothness+1);
+		for (i=0; i<sphereSmoothness; i++)
+		{
+				tmpradius = cosf(PI/2 - (i+1)*(tmpangle)) * sphereradius;
+				tmpheight = sinf(PI/2 - (i+1)*(tmpangle)) * sphereradius;
+				for(j=0;j<sphereSmoothness*2 + 2;j++)
+				{
+						spherepoints[1 + i*(sphereSmoothness*2 + 2) + j] = createp3d(cosf(j*tmpangle)*tmpradius,tmpheight,sinf(j*tmpangle)*tmpradius);
+				}
+		}
+		
 		clockstart = clock();
 }
 
@@ -615,7 +580,7 @@ int main(int argc, char **argv)
 		glutKeyboardFunc( keyboard );								// register Keyboard Handler
 		initialize();
 		glutMainLoop();												// run GLUT mainloop
-		
+#ifdef renderBezier
 		releasep2darr(points, pointnum);
 		for(i=0;i<exlinesnum;i++)
 				releasep2darr(exlines[i], pointnum);
@@ -627,6 +592,7 @@ int main(int argc, char **argv)
 		free(moonexlines);
 		
 		releasep2darr(sunpoints, sunpnum);
-
+#endif
+		releasep3darr(spherepoints,spherePointnum(sphereSmoothness));
 		return 0;
 }
