@@ -4,6 +4,7 @@ uniform vec3 dir;
 uniform float dist;
 uniform vec3 mycolor;
 uniform float mypow;
+
 void main()
 {
 //	gl_FragColor = gl_Color;

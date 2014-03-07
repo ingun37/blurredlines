@@ -22,7 +22,16 @@ p3d createp3d(float x, float y, float z)
 		
 		return p;
 }
-
+p3d* createp3dArr(int num)
+{
+		int i;
+		p3d* arr = (p3d*)malloc(num*sizeof(p3d));
+		for(i=0;i<num;i++)
+		{
+				arr[i] = createp3d(0,0,0);
+		}
+		return arr;
+}
 p2d linearInterpolate(p2d p1, p2d p2, float f)
 {
 		return createp2d(p1[0]*(1-f) + p2[0]*f, p1[1]*(1-f) + p2[1]*f );

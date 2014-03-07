@@ -10,7 +10,7 @@ typedef float* p3d;
 
 p2d createp2d(float x, float y);
 p3d createp3d(float x, float y, float z);
-
+p3d* createp3dArr(int num);
 p2d linearInterpolate(p2d p1, p2d p2, float f);
 p2d copyp(p2d p);
 p2d normalize(p2d p);
