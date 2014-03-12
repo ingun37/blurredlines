@@ -1,20 +1,73 @@
-varying vec3 mypos;
-varying vec3 mynorm;
-uniform vec3 lightdir;
-uniform vec3 Lirradiance;
+varying vec3 mypos;//월드행렬이 곱해진 버텍스의 위치 interpolation된값
+varying vec3 mynorm;//노말 interpolation된
+uniform vec3 eyepos;//눈위치
+uniform vec3 specc;
+uniform vec3 spherecenter;
+
+//////일직선 빛 정보들
+uniform vec3 lightdir;//빛의 방향 (빛이오는쪽방향)
+uniform vec3 Lirradiance;//빛의 밝기 ( rgb값)
+//////
+
+
 void main()
 {
 		float normlen;
 		vec3 normednorm;
 		float cosnl;
 		vec3 Lcos;
-		vec3 Ldiff;
+		float diffIntense;
+		vec3 finaldiffcolor;
+
+		vec3 view;
+		vec3 myhalf;
+		float myhalflen;
+
+		float viewlen;
+		float constM;
+		float coshn;
+		float specIntense;
+		vec3 finalspeccolor;
+		
+		vec3 finalcolor;
+		
+		//mynorm은 normalize된 normal벡터가 아니므로 다시 해준다.
 		normlen = length(mynorm);
 		normednorm = vec3(mynorm.x/normlen, mynorm.y/normlen, mynorm.z/normlen);
-		cosnl = dot(lightdir,normednorm);
-		Lcos = vec3(Lirradiance.x * cosnl,Lirradiance.y * cosnl,Lirradiance.z * cosnl);
-		Ldiff = vec3(gl_Color.x * Lcos.x/3.141592,gl_Color.y * Lcos.y/3.141592,gl_Color.z * Lcos.z/3.141592);
 		
-		gl_FragColor = vec4(Ldiff.x,Ldiff.y,Ldiff.z,1);
+		//clamp해주는 이유는 cos값이 0보다 작아지면 표면이 빛을 받지않는 쪽을 바라보고있다는뜻이므로 그냥 0으로 해준다.
+		
+		cosnl = clamp( dot(lightdir,normednorm),0.0,1.0);
+		
+		//빛의 밝기에 cos값을 곱해서 경사가 질수록 밝기가 줄어드는 부분.
+		Lcos = vec3(Lirradiance.x * cosnl,Lirradiance.y * cosnl,Lirradiance.z * cosnl);
+		
+		//diffuse light에 곱해줄 상수
+		//diffuse color로는 그냥 gl_Color를 쓴다.
+		diffIntense = 1.0/3.141592;
+		//diffIntense = 0.0;
+		finaldiffcolor = vec3(diffIntense * gl_Color.x, diffIntense * gl_Color.y, diffIntense * gl_Color.z);
+		
+		//specular light에 곱해줄 상수 M 클수록 빛나는부분이 좁아진다.
+		constM = 20.0;
+		//mypos -> eyepos 벡터 normalize
+		view = vec3(eyepos.x - mypos.x, eyepos.y - mypos.y, eyepos.z - mypos.z);
+		viewlen = length(view);
+		view = vec3(view.x/viewlen,view.y/viewlen,view.z/viewlen);
+		
+		//view와 light의 half벡터 normalize
+		myhalf = vec3(view.x + lightdir.x, view.y + lightdir.y, view.z + lightdir.z);
+		myhalflen = length(myhalf);
+		myhalf = vec3(myhalf.x/myhalflen, myhalf.y/myhalflen, myhalf.z/myhalflen);
+		
+		//half벡터와 normal벡터가 비슷할수록 눈위치가 빛방향의 반사방향과 비슷하다는뜻이므로 빛나는 부분.
+		coshn = dot(normednorm,myhalf);
+		specIntense = (constM/7.0 + 1.0)/8.0*3.141592*pow(coshn,constM);
+		finalspeccolor = vec3(specIntense * specc.x,specIntense*specc.y,specIntense * specc.z);
+		
+		
+		finalcolor = vec3((finalspeccolor.x + finaldiffcolor.x)*Lcos.x + 0.1,(finalspeccolor.y + finaldiffcolor.y)*Lcos.y + 0.1,(finalspeccolor.z + finaldiffcolor.z)*Lcos.z + 0.1);
+		
+		gl_FragColor = vec4(finalcolor.x,finalcolor.y,finalcolor.z,1);
 
 }

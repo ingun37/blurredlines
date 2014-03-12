@@ -16,7 +16,7 @@
 //#define PI 3.141592
 #define D360 (PI*2)
 #define A2R(a) (D360*(((float)a)/360))
-
+static float eyepos[3] = {0,0,4};
 
 static int beziersmoothness = 100;
 static int pointnum=20;
@@ -57,7 +57,7 @@ static p3d *spherepoints;
 static GLuint shaderFLight;
 static GLuint shaderVLight;
 static GLuint shaderLightprogram;
-static GLint lvATTv3normalvector, lvUNIm4x4modelviewmatrix, lfUNIv3lightdir, lfUNIv3Lirradiance;
+static GLint lvATTv3normalvector, lvUNIm4x4modelviewmatrix, lfUNIv3lightdir, lfUNIv3Lirradiance, lfUNIv3eyepos, lfUNIv3specc, lfUNIv3spherecenter;
 static int* sphereindices;
 static const unsigned int sphereSmoothness = 3;
 static const float sphereradius = 3.0f;
@@ -156,6 +156,7 @@ void update()
 		float tmpf;
 		p2d tmpp, tmpp2;
 #ifdef renderBezier
+		{
 		for (i=0;i<exlinesnum;i++)
 		{
 				exlines[i] = copyp2darr(points, pointnum);
@@ -213,8 +214,10 @@ void update()
 				sunpoints[i] = tmpp;
 				
 		}
+		}
 #endif
 #ifdef renderGlow
+		{
 		p3d start;
 		p3d end;
 		p3d dir;
@@ -234,6 +237,7 @@ void update()
 		releasep3d(start);
 		releasep3d(end);
 		releasep3d(dir);
+		}
 #endif
 		/*
 		releasep3d(start);
@@ -247,6 +251,7 @@ void update()
 void drawfinish()
 {
 #ifdef renderBezier
+		{
 		int i;
 		for(i=0;i<exlinesnum;i++)
 		{
@@ -258,6 +263,7 @@ void drawfinish()
 		for(i=0;i<exmoonlinesnum;i++)
 		{
 				releasep2darr(moonexlines[i], moonpnum);
+		}
 		}
 #endif
 		
@@ -277,7 +283,7 @@ void display()
 		glLoadIdentity();
 		
 		//glLoadIdentity();
-		gluLookAt(0, 0, 1, 0, 0, -10, 0, 1, 0);
+		gluLookAt(eyepos[0], eyepos[1], eyepos[2], 0, 0, -10, 0, 1, 0);
 		
 		//glTranslatef(0.0f,0.0f,-10.0f);
 		
@@ -292,7 +298,7 @@ void display()
 		rotation =360 * ((float)(clockcurrent%10000000))/10000000;
 		
 #ifdef renderBezier
-
+{
 				glPushMatrix();
 
 				glUseProgram(0);
@@ -330,20 +336,25 @@ void display()
 				drawBezier(points, pointnum, beziersmoothness);
 				for(i=0;i<exlinesnum;i++)
 						drawBezier(exlines[i], pointnum, beziersmoothness);
-
+}
 #endif
 		glUseProgram(shaderLightprogram);
 		
 		glPushMatrix();
 		glTranslatef(0,0,-10.0f);
-		glRotatef(30,1,0,0);
+		//glRotatef(30,1,0,0);
 		glRotatef(sinf(rotation*0.1)*260,0,1,0);
 		
 		glColor3f(0.2f,0.7f,0.7f);
 		
-		glUniform3f(lfUNIv3lightdir,1,1,1);
+		float ldx=1, ldy=1, ldz=1, len;
+		len = sqrt(ldx*ldx + ldy*ldy + ldz*ldz);
+		glUniform3f(lfUNIv3lightdir,ldx/len,ldy/len,ldz/len);
+		
 		glUniform3f(lfUNIv3Lirradiance,1,1,1);
-
+		glUniform3f(lfUNIv3eyepos, eyepos[0], eyepos[1], eyepos[2]);
+		glUniform3f(lfUNIv3specc,1,1,1);
+		glUniform3f(lfUNIv3spherecenter, 0,0,-10);
 		glBegin(GL_TRIANGLES);
 		
 		tmp = sphereFaceNum(sphereSmoothness);
@@ -355,10 +366,28 @@ void display()
 		
 		glEnd();
 		
+		/*
+		glUseProgram(0);
+		glColor3f(0,0.9,0.1);
+		glBegin(GL_LINES);
+		tmp = sphereFaceNum(sphereSmoothness);
+		for(i=0;i<tmp;i++)
+		{
+				glVertex4f(spherepoints[ sphereindices[i*3 + 0]][0],spherepoints[ sphereindices[i*3 + 0]][1],spherepoints[ sphereindices[i*3 + 0]][2],1.0f);
+				glVertex4f(spherepoints[ sphereindices[i*3 + 1]][0],spherepoints[ sphereindices[i*3 + 1]][1],spherepoints[ sphereindices[i*3 + 1]][2],1.0f);
+				glVertex4f(spherepoints[ sphereindices[i*3 + 1]][0],spherepoints[ sphereindices[i*3 + 1]][1],spherepoints[ sphereindices[i*3 + 1]][2],1.0f);
+				glVertex4f(spherepoints[ sphereindices[i*3 + 2]][0],spherepoints[ sphereindices[i*3 + 2]][1],spherepoints[ sphereindices[i*3 + 2]][2],1.0f);
+				glVertex4f(spherepoints[ sphereindices[i*3 + 2]][0],spherepoints[ sphereindices[i*3 + 2]][1],spherepoints[ sphereindices[i*3 + 2]][2],1.0f);
+				glVertex4f(spherepoints[ sphereindices[i*3 + 0]][0],spherepoints[ sphereindices[i*3 + 0]][1],spherepoints[ sphereindices[i*3 + 0]][2],1.0f);
+		}
+		
+		glEnd();
+		*/
 		glPopMatrix();
 		
 		
 #ifdef renderGlow
+		{
 		glUseProgram(shaderprogram);
 		
 		glPushMatrix();
@@ -442,6 +471,7 @@ void display()
 		glEnd();
 		
 		glPopMatrix();
+		}
 #endif
 		
 		
@@ -484,6 +514,7 @@ void initialize ()
 		glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );						// specify implementation-specific hints
 		glClearColor(0.0, 0.0, 0.0, 1.0);											// specify clear values for the color buffers
 #ifdef renderBezier
+		{
 		points = (p2d*)malloc(sizeof(p2d)*pointnum);
 		
 		for (i=0; i<pointnum; i++)
@@ -522,8 +553,10 @@ void initialize ()
 		}
 		
 		sunexlines = (p2d**)malloc(sizeof(p2d*)*sunexlinesnum);
+		}
 #endif
 #ifdef renderGlow
+		{
 		glowingline = (p3d*)malloc(sizeof(p3d)*4);
 		
 		
@@ -543,11 +576,10 @@ void initialize ()
 		lv3dir = glGetUniformLocation( shaderprogram,"dir");
 		lfdist = glGetUniformLocation( shaderprogram,"dist");
 		lfmypow = glGetUniformLocation( shaderprogram, "mypow");
+		}
 #endif
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
-		
-		
 		
 		unsigned int pnum = spherePointnum(sphereSmoothness);
 		unsigned int slicenum = sphereVertNumPerSlice(sphereSmoothness);
@@ -562,10 +594,11 @@ void initialize ()
 		glLinkProgram(shaderLightprogram);
 		
 		lvATTv3normalvector = glGetAttribLocation( shaderLightprogram, "normalvector");
-
 		lfUNIv3lightdir = glGetUniformLocation( shaderLightprogram, "lightdir");
 		lfUNIv3Lirradiance = glGetUniformLocation (shaderLightprogram, "Lirradiance");
-		
+		lfUNIv3eyepos = glGetUniformLocation (shaderLightprogram, "eyepos");
+		lfUNIv3specc = glGetUniformLocation (shaderLightprogram, "specc");
+		lfUNIv3spherecenter = glGetUniformLocation (shaderLightprogram, "spherecenter");
 		printf("sphere point num : %d\nslicenum : %d\nfacenum : %d\n",pnum,slicenum,facenum);
 		
 		//spherepoints = (p3d*)malloc(sizeof(p3d)*pnum);

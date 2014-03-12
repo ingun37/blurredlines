@@ -3,8 +3,12 @@ varying vec3 mynorm;
 varying vec3 mypos;
 void main()
 {
-		mypos = vec3( gl_Vertex.x, gl_Vertex.y, gl_Vertex.z);
+		vec4 transformed;
 		mynorm = gl_NormalMatrix*normalvector;
+		transformed = gl_ModelViewMatrix * gl_Vertex;
+		mypos = vec3( transformed.x, transformed.y, transformed.z);
+		
 		gl_FrontColor = gl_Color;
+		
 		gl_Position = ftransform();
 }
