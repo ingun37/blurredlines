@@ -12,61 +12,53 @@ uniform vec3 Lirradiance;//빛의 밝기 ( rgb값)
 
 void main()
 {
-		float normlen;
 		vec3 normednorm;
 		float cosnl;
 		vec3 Lcos;
 		float diffIntense;
-		vec3 finaldiffcolor;
+		vec4 finaldiffcolor;
 
 		vec3 view;
 		vec3 myhalf;
 		float myhalflen;
 
-		float viewlen;
 		float constM;
 		float coshn;
 		float specIntense;
 		vec3 finalspeccolor;
 		
 		vec3 finalcolor;
+		vec3 ambient;
 		
 		//mynorm은 normalize된 normal벡터가 아니므로 다시 해준다.
-		normlen = length(mynorm);
-		normednorm = vec3(mynorm.x/normlen, mynorm.y/normlen, mynorm.z/normlen);
-		
+		normednorm = normalize(mynorm);
 		//clamp해주는 이유는 cos값이 0보다 작아지면 표면이 빛을 받지않는 쪽을 바라보고있다는뜻이므로 그냥 0으로 해준다.
 		
 		cosnl = clamp( dot(lightdir,normednorm),0.0,1.0);
 		
 		//빛의 밝기에 cos값을 곱해서 경사가 질수록 밝기가 줄어드는 부분.
-		Lcos = vec3(Lirradiance.x * cosnl,Lirradiance.y * cosnl,Lirradiance.z * cosnl);
-		
+		Lcos = cosnl * Lirradiance;
 		//diffuse light에 곱해줄 상수
 		//diffuse color로는 그냥 gl_Color를 쓴다.
 		diffIntense = 1.0/3.141592;
 		//diffIntense = 0.0;
-		finaldiffcolor = vec3(diffIntense * gl_Color.x, diffIntense * gl_Color.y, diffIntense * gl_Color.z);
-		
+		finaldiffcolor = diffIntense * gl_Color;
 		//specular light에 곱해줄 상수 M 클수록 빛나는부분이 좁아진다.
 		constM = 20.0;
 		//mypos -> eyepos 벡터 normalize
-		view = vec3(eyepos.x - mypos.x, eyepos.y - mypos.y, eyepos.z - mypos.z);
-		viewlen = length(view);
-		view = vec3(view.x/viewlen,view.y/viewlen,view.z/viewlen);
+		view = eyepos - mypos;
+		view = normalize(view);
 		
 		//view와 light의 half벡터 normalize
-		myhalf = vec3(view.x + lightdir.x, view.y + lightdir.y, view.z + lightdir.z);
-		myhalflen = length(myhalf);
-		myhalf = vec3(myhalf.x/myhalflen, myhalf.y/myhalflen, myhalf.z/myhalflen);
+		myhalf = view + lightdir;
+		myhalf = normalize(myhalf);
 		
 		//half벡터와 normal벡터가 비슷할수록 눈위치가 빛방향의 반사방향과 비슷하다는뜻이므로 빛나는 부분.
 		coshn = dot(normednorm,myhalf);
 		specIntense = (constM/7.0 + 1.0)/8.0*3.141592*pow(coshn,constM);
-		finalspeccolor = vec3(specIntense * specc.x,specIntense*specc.y,specIntense * specc.z);
+		finalspeccolor = specIntense * specc;
 		
-		
-		finalcolor = vec3((finalspeccolor.x + finaldiffcolor.x)*Lcos.x + 0.1,(finalspeccolor.y + finaldiffcolor.y)*Lcos.y + 0.1,(finalspeccolor.z + finaldiffcolor.z)*Lcos.z + 0.1);
+		finalcolor = (Lcos * (finaldiffcolor.xyz + finalspeccolor.xyz)) + (0.1 * gl_Color.xyz);
 		
 		gl_FragColor = vec4(finalcolor.x,finalcolor.y,finalcolor.z,1);
 
