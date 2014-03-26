@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "myshader.h"
 int printError(char* file, int line)
 {
@@ -136,14 +137,42 @@ GLint makeVertexArrayBufferToAttribute(char* varname, GLint *location, GLuint pr
  int willNormalize;
  GLvoid* offset;
  */
+static VAOparameter fixedparameters[2];
+VAOparameter* getFixedVAOParameters()
+{
+		static int inited = 0;
+		if(inited == 0)
+		{
+				memset(fixedparameters[0].varname, 0, sizeof(fixedparameters[0].varname));
+				strncpy(fixedparameters[0].varname, "position", 8);
+				fixedparameters[0].location = 0;
+				fixedparameters[0].elementnum = 3;
+				fixedparameters[0].type = GL_FLOAT;
+				fixedparameters[0].willNormalize = 0;
+				fixedparameters[0].offset = (unsigned char*)NULL + 0;
+				
+				memset(fixedparameters[1].varname, 0, sizeof(fixedparameters[1].varname));
+				strncpy(fixedparameters[1].varname, "normal", 6);
+				fixedparameters[1].location = 1;
+				fixedparameters[1].elementnum = 3;
+				fixedparameters[1].type = GL_FLOAT;
+				fixedparameters[1].willNormalize = 1;
+				fixedparameters[1].offset = (unsigned char*)NULL + (sizeof(float) * 3);
+				
+				inited = 1;
+		}
+		return fixedparameters;
+}
 GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLuint program, GLuint* buffer, void* data, int structSize, unsigned int arraylen)
 {
 		int i;
 		int location;
-		
+		/*
 		glGenBuffers(1, buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, *buffer);
 		glBufferData(GL_ARRAY_BUFFER, arraylen * structSize, data, GL_STATIC_DRAW);
+		 */
+		makeVAOBufferOnly(buffer, data, structSize, arraylen);
 		for(i=0;i<parameternum;i++)
 		{
 				location = glGetAttribLocation(program, parameters[i].varname);
@@ -156,33 +185,17 @@ GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLui
 		}
 }
 
-GLint makeVertexArrayPositionBufferToAttribute(char* varname, GLint *location, GLuint program, GLuint* buffer, float* data, unsigned int arraylen)
+GLint makeVAOBufferOnly( GLuint* buffer, void* data, int structSize, unsigned int arraylen)
 {
-		//return makeVertexArrayBufferToAttribute(varname, location, program, buffer, data, arraylen * sizeof(float), GL_ARRAY_BUFFER, 4, GL_FLOAT);
-		if(location == NULL) return 1;
-		if(buffer == NULL) return 1;
-		//attribute변수 위치 받아오고...
-		*location = glGetAttribLocation( program, varname);
-		printf("%d %s %d\n",program,varname,*location);
-		//버퍼 한개 만들어서 아이디 buffer에 집어넣고..
-		glGenBuffers(1,buffer);
-		printOpenGLError();
-		//그 버퍼는 GL_ARRAY_BUFFER형식이라고 말하고..
+		int i;
+		int location;
 		
+		glGenBuffers(1, buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, *buffer);
-		printOpenGLError();
-		//버퍼에 데이타쌓고
-		glBufferData(GL_ARRAY_BUFFER, arraylen * sizeof(float), data, GL_STATIC_DRAW);
-		printOpenGLError();
-		//키고..
-		glEnableVertexAttribArray(*location);
-		printOpenGLError();
-		//변수형 알려주고..
-		glVertexAttribPointer(*location, 4, GL_FLOAT, 0, 0, 0);
-		printOpenGLError();
+		glBufferData(GL_ARRAY_BUFFER, arraylen * structSize, data, GL_STATIC_DRAW);
 }
 
-GLint makeVertexArrayIndexBuffer(char* varname, GLint *location, GLuint program, GLuint* buffer,unsigned short* data, unsigned int arraylen)
+GLint makeVertexArrayIndexBuffer( GLuint program, GLuint* buffer,unsigned short* data, unsigned int arraylen)
 {
 		//return makeVertexArrayBufferToAttribute(varname, location, program, buffer, data, arraylen * sizeof(int), GL_ELEMENT_ARRAY_BUFFER, 1, GL_FLOAT);
 		if(buffer == NULL) return 1;

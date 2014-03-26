@@ -66,12 +66,13 @@ static GLuint shaderVLight;
 static GLuint shaderLightprogram;
 
 static GLuint vao=0;
-static GLuint buffPosition=0, buffIndex=0, buffNormal=0, buffvertexarr;
+static GLuint buffIndex=0, buffvertexarr;
 static GLint lvATTv3normalvector, lvUNIm4x4modelviewmatrix, lfUNIv3lightdir, lfUNIv3Lirradiance, lfUNIv3eyepos, lfUNIv3specc, lfUNIv3spherecenter, lvATTv4position=0, lvATTv4normal=0, lvATTiIndex=0;
 static unsigned short* sphereindices;
 static const unsigned int sphereSmoothness = 20;
 static const float sphereradius = 2;
 static Vertex* spherevertices;
+
 //light1은 directional
 static GLfloat sphereMaterialDiffuse[] = {0.7f,0.2f,0.4f,1};
 static GLfloat sphereMaterialAmbient[] = {0.7f,0.2f,0.4f,1};
@@ -377,10 +378,7 @@ void display()
 		float ldx=1, ldy=1, ldz=1, len;
 		len = sqrt(ldx*ldx + ldy*ldy + ldz*ldz);
 		
-		glUniform3f(lfUNIv3lightdir,ldx/len,ldy/len,ldz/len);
-		glUniform3f(lfUNIv3Lirradiance,1,1,1);
 		glUniform3f(lfUNIv3eyepos, eyepos[0], eyepos[1], eyepos[2]);
-		glUniform3f(lfUNIv3specc,1,1,1);
 		glUniform3f(lfUNIv3spherecenter, 0,0,-10);
 		
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, sphereMaterialDiffuse);
@@ -619,24 +617,7 @@ void initialize ()
 		
 		makeSphereObject(sphereSmoothness, sphereradius, &spherevertices, &sphereindices );
 		
-		for(i=0;i<facenum*3;i++)
-		{
-				printf("%d. index : %d & vertex : %4.1f %4.1f %4.1f %4.1f & normal : %4.1f %4.1f %4.1f %4.1f\n"
-					   , i
-					   , sphereindices[i]
-					   , spherevertices[sphereindices[i]].position[0]
-					   , spherevertices[sphereindices[i]].position[1]
-					   , spherevertices[sphereindices[i]].position[2]
-					   , spherevertices[sphereindices[i]].position[2]
-					   , spherevertices[sphereindices[i]].normal[0]
-					   , spherevertices[sphereindices[i]].normal[1]
-					   , spherevertices[sphereindices[i]].normal[2]
-					   , spherevertices[sphereindices[i]].normal[2]
-					   );
-		}
-		
 		glGenVertexArraysAPPLE(1, &vao);
-
 		glBindVertexArrayAPPLE(vao);
 
 		VAOparameter infos[2];
@@ -660,7 +641,7 @@ void initialize ()
 		
 
 
-		makeVertexArrayIndexBuffer("index",&lvATTiIndex, shaderLightprogram, &buffIndex, sphereindices, facenum * 3);
+		makeVertexArrayIndexBuffer( shaderLightprogram, &buffIndex, sphereindices, facenum * 3);
 
 		//printf("lvATTv4position : %d, buffPosition : %d\n", lvATTv4position, buffPosition);
 		
@@ -702,7 +683,7 @@ int main(int argc, char **argv)
 		// initialize and run program
 		glutInit(&argc, argv);                                      // GLUT initialization
 		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );  // Display Mode
-																	 //glutInitContextProfile(GLUT_CORE_PROFILE | GLUT_COMPATIBILITY_PROFILE);
+		//glutInitContextProfile(GLUT_CORE_PROFILE | GLUT_COMPATIBILITY_PROFILE);
 
 		glutInitWindowSize(win.width,win.height);					// set window size
 		glutCreateWindow(win.title);								// create Window

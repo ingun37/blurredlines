@@ -22,8 +22,8 @@ extern "C"{
 int printError(char* file, int line);
 GLuint makeVertexShader(char* path, GLint *perror);
 GLuint makeFragmentShader(char* path, GLint *perror);
-GLint makeVertexArrayIndexBuffer(char* varname, GLint *location, GLuint program, GLuint* buffer,unsigned short* data, unsigned int arraylen);
-GLint makeVertexArrayPositionBufferToAttribute(char* varname, GLint *location, GLuint program, GLuint* buffer, float* data, unsigned int arraylen);
+GLint makeVertexArrayIndexBuffer( GLuint program, GLuint* buffer,unsigned short* data, unsigned int arraylen);
+
 GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLuint program, GLuint* buffer, void* data, int structSize, unsigned int arraylen);
 GLuint makeProgram(GLuint attachingVertexShader, GLuint attachingFragmentShader);
 #ifdef __cplusplus
