@@ -22,6 +22,20 @@ p3d createp3d(float x, float y, float z)
 		
 		return p;
 }
+float* create1df4ArrayFromP3dArray(p3d* arr, unsigned int pnum, float w)
+{
+		int i,j;
+		float* farr = (float*)malloc(sizeof(float)*4*pnum);
+		for(i=0;i<pnum;i++)
+		{
+				for(j=0;j<3;j++)
+				{
+						farr[i*4 + j] = arr[i][j];
+				}
+				farr[3] = w;
+		}
+		return farr;
+}
 p3d* createp3dArr(int num)
 {
 		int i;

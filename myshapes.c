@@ -1,7 +1,54 @@
-#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "myshapes.h"
-int makeSphereVerticesAndIndices(unsigned int smoothness,float radius, float **vertices, int *indices)
+#include "vertex.h"
+int makePlane(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, float*** vertices, int** indices, int isClockwise)
+{
+		float** tmpv;
+		int* tmpi;
+		int i, j;
+		int widthvnum = widthSeg + 1;
+		int heightvnum = heightSeg + 1;
+		*vertices = createp3dArr(widthvnum * heightvnum);
+		tmpv = *vertices;
+		for (i=0; i<heightvnum; i++)
+		{
+				for(j=0;j<widthvnum;j++)
+				{
+						tmpv[i*widthvnum + j][0] = j*(widthLen/widthSeg) - widthLen/2;
+						tmpv[i*widthvnum + j][1] = 0;
+						tmpv[i*widthvnum + j][2] = i*(heightLen/heightSeg) - heightLen/2;;
+				}
+		}
+		*indices = (int*)malloc(sizeof(int) * widthSeg * heightSeg * 6);
+		tmpi = *indices;
+		for (i=0; i<heightSeg; i++)
+		{
+				for(j=0;j<widthSeg;j++)
+				{
+						if(isClockwise)
+						{
+								tmpi[6*(i*widthSeg + j) + 0] = (i+1)*widthvnum + j;
+								tmpi[6*(i*widthSeg + j) + 1] = i*widthvnum + j;
+								tmpi[6*(i*widthSeg + j) + 2] = i*widthvnum + j+1;
+								tmpi[6*(i*widthSeg + j) + 3] = i*widthvnum + j+1;
+								tmpi[6*(i*widthSeg + j) + 4] = (i+1)*widthvnum + j+1;
+								tmpi[6*(i*widthSeg + j) + 5] = (i+1)*widthvnum + j;
+						}
+						else
+						{
+								tmpi[6*(i*widthSeg + j) + 0] = (i+1)*widthvnum + j;
+								tmpi[6*(i*widthSeg + j) + 1] = (i+1)*widthvnum + j+1;
+								tmpi[6*(i*widthSeg + j) + 2] = i*widthvnum + j+1;
+								tmpi[6*(i*widthSeg + j) + 3] = i*widthvnum + j+1;
+								tmpi[6*(i*widthSeg + j) + 4] = i*widthvnum + j;
+								tmpi[6*(i*widthSeg + j) + 5] = (i+1)*widthvnum + j;
+						}
+				}
+		}
+		return 0;
+}
+int makeSphereVerticesAndIndices(unsigned int smoothness,float radius, float **vertices, unsigned short *indices, float*** normals)
 {
 		int i, j;
 		float tmpangle, tmpradius, tmpheight;
@@ -11,11 +58,11 @@ int makeSphereVerticesAndIndices(unsigned int smoothness,float radius, float **v
 		vertices[0][0] = 0;
 		vertices[0][1] = radius;
 		vertices[0][2] = 0;
-		puts("fffff");
+
 		vertices[pnum-1][0] = 0;
 		vertices[pnum-1][1] = -radius;
 		vertices[pnum-1][2] = 0;
-		puts("vertices num right");
+
 		tmpangle = PI/(smoothness+1);
 		
 		for (i=0; i<smoothness; i++)
@@ -57,6 +104,60 @@ int makeSphereVerticesAndIndices(unsigned int smoothness,float radius, float **v
 				indices[facenum*3 - (slicenum*3) + i*3 + 1] = (pnum-1) -slicenum + i;
 				indices[facenum*3 - (slicenum*3) + i*3 + 2] = (pnum-1) -slicenum + ((i + 1)%slicenum);
 		}
+		if(normals)
+		{
+				*normals = createp3dArr(pnum);
+				for(i=0;i<pnum;i++)
+				{
+						(*normals)[i] = createp3d(vertices[i][0]/radius,vertices[i][1]/radius,vertices[i][2]/radius);
+				}
+		}
 		
 		return 0;
+}
+
+int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, unsigned short** indices)
+{
+		int i;
+		unsigned int pnum = spherePointnum(smoothness);
+		unsigned int slicenum = sphereVertNumPerSlice(smoothness);
+		unsigned int facenum = sphereFaceNum(smoothness);
+		
+		p3d* spherepoints = createp3dArr(pnum);
+		unsigned short* tmpindices = (unsigned short*)malloc(sizeof(unsigned short)*facenum*3);
+		
+		p3d* normals;
+		makeSphereVerticesAndIndices(smoothness, radius, spherepoints, tmpindices, &normals);
+		
+		puts("asdf");
+		for (i=0;i<facenum*3;i++)
+		{
+				printf("%d ",tmpindices[i]);
+		}
+		puts("asdf");
+		
+		if(indices)
+		{
+				printf("fdas	%d\n",tmpindices);
+				*indices = tmpindices;
+		}
+		if(vertices)
+		{
+				*vertices = (Vertex*)malloc(sizeof(Vertex) * pnum);
+				for(i=0;i<pnum;i++)
+				{
+						(*vertices)[i].position[0] = spherepoints[i][0];
+						(*vertices)[i].position[1] = spherepoints[i][1];
+						(*vertices)[i].position[2] = spherepoints[i][2];
+						//(*vertices)[i].position[3] = 1;
+						
+						(*vertices)[i].normal[0] = normals[i][0];
+						(*vertices)[i].normal[1] = normals[i][1];
+						(*vertices)[i].normal[2] = normals[i][2];
+						//(*vertices)[i].normal[3] = 0;
+				}
+		}
+		if(indices == NULL)
+				free(tmpindices);
+		releasep3darr(spherepoints, pnum);
 }
