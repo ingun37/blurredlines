@@ -195,7 +195,7 @@ GLint makeVAOBufferOnly( GLuint* buffer, void* data, int structSize, unsigned in
 		glBufferData(GL_ARRAY_BUFFER, arraylen * structSize, data, GL_STATIC_DRAW);
 }
 
-GLint makeVertexArrayIndexBuffer( GLuint program, GLuint* buffer,unsigned short* data, unsigned int arraylen)
+GLint makeVertexArrayIndexBuffer( GLuint* buffer,unsigned short* data, unsigned int arraylen)
 {
 		//return makeVertexArrayBufferToAttribute(varname, location, program, buffer, data, arraylen * sizeof(int), GL_ELEMENT_ARRAY_BUFFER, 1, GL_FLOAT);
 		if(buffer == NULL) return 1;

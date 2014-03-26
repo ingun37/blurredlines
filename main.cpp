@@ -13,6 +13,7 @@
 #include "vertex.h"
 #include "myshader.h"
 #include "myshapes.h"
+//#include "mymesh.h"
 
 #define KEY_ESCAPE 27
 //#define PI 3.141592
@@ -64,6 +65,8 @@ static int planeheightseg = 2;
 static GLuint shaderFLight;
 static GLuint shaderVLight;
 static GLuint shaderLightprogram;
+
+//static myMesh* meshSphere;
 
 static GLuint vao=0;
 static GLuint buffIndex=0, buffvertexarr;
@@ -641,7 +644,7 @@ void initialize ()
 		
 
 
-		makeVertexArrayIndexBuffer( shaderLightprogram, &buffIndex, sphereindices, facenum * 3);
+		makeVertexArrayIndexBuffer(  &buffIndex, sphereindices, facenum * 3);
 
 		//printf("lvATTv4position : %d, buffPosition : %d\n", lvATTv4position, buffPosition);
 		
