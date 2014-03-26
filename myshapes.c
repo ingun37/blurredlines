@@ -2,10 +2,10 @@
 #include <math.h>
 #include "myshapes.h"
 #include "vertex.h"
-int makePlane(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, float*** vertices, int** indices, int isClockwise)
+int makePlane(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, float*** vertices, unsigned short** indices, int isClockwise)
 {
 		float** tmpv;
-		int* tmpi;
+		short* tmpi;
 		int i, j;
 		int widthvnum = widthSeg + 1;
 		int heightvnum = heightSeg + 1;
@@ -45,6 +45,31 @@ int makePlane(float widthLen, float heightLen, unsigned int widthSeg, unsigned i
 								tmpi[6*(i*widthSeg + j) + 5] = (i+1)*widthvnum + j;
 						}
 				}
+		}
+		return 0;
+}
+int makePlaneObject(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, Vertex** vertices, unsigned short** indices, int isClockwise)
+{
+		float** tmpvert;
+		int i;
+		int vnum = (widthSeg + 1) * (heightSeg + 1);
+		makePlane(widthLen,heightLen, widthSeg, heightSeg, &tmpvert, indices, isClockwise );
+		
+		*vertices = (Vertex*)malloc(sizeof(Vertex) * vnum);
+		for(i=0;i<vnum;i++)
+		{
+				(*vertices)[i].position[0] = tmpvert[i][0];
+				(*vertices)[i].position[1] = tmpvert[i][1];
+				(*vertices)[i].position[2] = tmpvert[i][2];
+				//memcpy((*vertices)[i].position, tmpvert[i], sizeof(float)*3);
+				
+				(*vertices)[i].normal[0] = 0;
+				(*vertices)[i].normal[1] = 1;
+				(*vertices)[i].normal[2] = 0;
+				
+				(*vertices)[i].uv[0] = ((float)(i%(widthSeg+1)))/widthSeg;
+				(*vertices)[i].uv[1] = ((float)(i/(widthSeg+1)))/heightSeg;
+				printf("%f %f\n",(*vertices)[i].uv[0],(*vertices)[i].uv[1]);
 		}
 		return 0;
 }

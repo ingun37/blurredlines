@@ -28,6 +28,7 @@ GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLui
 
 GLint makeVAOBufferOnly( GLuint* buffer, void* data, int structSize, unsigned int arraylen);
 VAOparameter* getFixedVAOParameters();
+unsigned int getNumFixedVAOParameters();
 GLuint makeProgram(GLuint attachingVertexShader, GLuint attachingFragmentShader);
 #ifdef __cplusplus
 }

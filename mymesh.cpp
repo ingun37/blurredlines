@@ -62,7 +62,6 @@ int myMesh::setShader(char* vshadername, char* fshadername)
 
 unsigned int myMesh::getVnum(){ return numVertices; }
 unsigned int myMesh::getInum(){ return numIndices; }
-
 unsigned int myMesh::getVAO()
 {
 		return vao;
@@ -85,7 +84,9 @@ int myMesh::setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum)
 		glBindVertexArrayAPPLE(vao);
 		
 		if(program)
-				makeVAOBufferToAttribute(getFixedVAOParameters(), 2, program, &vbo, pv, sizeof(Vertex), vnum);
+		{
+				makeVAOBufferToAttribute(getFixedVAOParameters(), getNumFixedVAOParameters(), program, &vbo, pv, sizeof(Vertex), vnum);
+		}
 		else
 				makeVAOBufferOnly(&vbo, pv, sizeof(Vertex), vnum);
 		

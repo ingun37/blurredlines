@@ -1,6 +1,7 @@
 //#version 320
 attribute vec3 position;
 attribute vec3 normal;
+attribute vec2 uv;
 //in vec4 position;
 //in vec4 normal;
 

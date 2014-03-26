@@ -137,7 +137,11 @@ GLint makeVertexArrayBufferToAttribute(char* varname, GLint *location, GLuint pr
  int willNormalize;
  GLvoid* offset;
  */
-static VAOparameter fixedparameters[2];
+static VAOparameter fixedparameters[3];
+unsigned int getNumFixedVAOParameters()
+{
+		return sizeof(fixedparameters)/sizeof(VAOparameter);
+}
 VAOparameter* getFixedVAOParameters()
 {
 		static int inited = 0;
@@ -158,6 +162,14 @@ VAOparameter* getFixedVAOParameters()
 				fixedparameters[1].type = GL_FLOAT;
 				fixedparameters[1].willNormalize = 1;
 				fixedparameters[1].offset = (unsigned char*)NULL + (sizeof(float) * 3);
+				
+				memset(fixedparameters[2].varname, 0, sizeof(fixedparameters[1].varname));
+				strncpy(fixedparameters[2].varname, "uv", 2);
+				fixedparameters[2].location = 2;
+				fixedparameters[2].elementnum = 2;
+				fixedparameters[2].type = GL_FLOAT;
+				fixedparameters[2].willNormalize = 0;
+				fixedparameters[2].offset = (unsigned char*)NULL + (sizeof(float) * 6);
 				
 				inited = 1;
 		}

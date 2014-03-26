@@ -56,31 +56,25 @@ static GLuint shaderF;
 
 static GLint lv3start, lv3dir, lfdist, lv3mycolor, lfmypow;
 
-static p3d *planepoints;
-static int* planeindices;
-static int planewidthseg = 2;
-static int planeheightseg = 2;
-
-//static p3d *spherepoints, *spherenormals;
+//shaders
 static GLuint shaderFLight;
 static GLuint shaderVLight;
 static GLuint shaderLightprogram;
 
-static myMesh* meshSphere;
+static GLuint shaderFChecker, shaderVChecker, shaderCheckProgram;
 
-static GLuint vao=0;
-static GLuint buffIndex=0, buffvertexarr;
-static GLint lvATTv3normalvector, lvUNIm4x4modelviewmatrix, lfUNIv3lightdir, lfUNIv3Lirradiance, lfUNIv3eyepos, lfUNIv3specc, lfUNIv3spherecenter, lvATTv4position=0, lvATTv4normal=0, lvATTiIndex=0;
+//meshes
+static myMesh* meshSphere;
+static myMesh* meshPlane;
+
+//locations
+static GLint lfUNIv3lightdir, lfUNIv3eyepos, lfUNIv3specc, lfUNIv3spherecenter;
+
+//sphere things...
 static unsigned short* sphereindices;
 static const unsigned int sphereSmoothness = 20;
 static const float sphereradius = 2;
 static Vertex* spherevertices;
-
-//light1은 directional
-static GLfloat sphereMaterialDiffuse[] = {0.7f,0.2f,0.4f,1};
-static GLfloat sphereMaterialAmbient[] = {0.7f,0.2f,0.4f,1};
-static GLfloat sphereMaterialSpecular[] = {1.f,1.f,1.f,1};
-
 static MaterialProperties spheremat =
 {
 		{0.7f,0.2f,0.4f,1},
@@ -89,6 +83,21 @@ static MaterialProperties spheremat =
 		20.f,
 };
 
+//plane things...
+static unsigned short* planeindices;
+static const float planeWidthlen=20, planeHeightlen=20, planeWidthSeg=4, planeHeightSeg = 4;
+static Vertex* planevertices;
+static MaterialProperties planemat =
+{
+		{0.7f,0.2f,0.4f,1},
+		{0.7f,0.2f,0.4f,1},
+		{1.f,1.f,1.f,1},
+		20.f,
+};
+
+
+
+//light1은 directional
 static GLfloat light1Ambient[] = {0.2f,0.2f,0.2f,1};
 static GLfloat light1Diffuse[] = {1,1,1,1};
 static GLfloat light1specular[] = {0.3f,0.3f,0.3f,1};
@@ -363,21 +372,19 @@ void display()
 						drawBezier(exlines[i], pointnum, beziersmoothness);
 }
 #endif
-		glUseProgram(0);
-
+		//render plane....
+		glUseProgram(shaderCheckProgram);
 
 		glPushMatrix();
 		glTranslatef(0,0,0);
 		glColor3f(0.1f, 0.4f, 0.1f);
-		glBegin(GL_TRIANGLES);
-		for(i=0;i<planeIndicesNum(planewidthseg,planeheightseg);i++)
-		{
-				glVertex3f( planepoints[ planeindices[i] ][0], planepoints[ planeindices[i] ][1], planepoints[ planeindices[i] ][2]);
-		}
 		
-		glEnd();
+		meshPlane->render();
+		
 		glPopMatrix();
 
+		
+		//render sphere....
 		glUseProgram(shaderLightprogram);
 
 		glPushMatrix();
@@ -393,35 +400,7 @@ void display()
 		glUniform3f(lfUNIv3eyepos, eyepos[0], eyepos[1], eyepos[2]);
 		glUniform3f(lfUNIv3spherecenter, 0,0,-10);
 		
-		
 		meshSphere->render();
-		
-		/*
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, sphereMaterialDiffuse);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, sphereMaterialSpecular);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, sphereMaterialAmbient);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.f);
-		
-		
-		//glBindVertexArrayAPPLE(vao);
-		
-		
-		glBindVertexArrayAPPLE(meshSphere->getVAO());
-		glDrawElements(GL_TRIANGLES, meshSphere->getInum() * sizeof(short), GL_UNSIGNED_SHORT, NULL);
-		glBindVertexArrayAPPLE(0);
-		 */
-		/*
-		glBegin(GL_TRIANGLES);
-		
-		tmp = sphereFaceNum(sphereSmoothness);
-		for(i=0;i<tmp*3;i++)
-		{
-				glVertexAttrib3f(lvATTv3normalvector, spherepoints[ sphereindices[i]][0]/sphereradius, spherepoints[ sphereindices[i]][1]/sphereradius, spherepoints[ sphereindices[i]][2]/sphereradius);
-				glVertex4f(spherepoints[ sphereindices[i]][0],spherepoints[ sphereindices[i]][1],spherepoints[ sphereindices[i]][2],1.0f);
-		}
-		
-		glEnd();
-		*/
 
 		glPopMatrix();
 		
@@ -617,21 +596,13 @@ void initialize ()
 		glEnable(GL_BLEND);
 		
 		
-		
+		//sphere.....
 		shaderVLight = makeVertexShader("light.vert",NULL);
 		shaderFLight = makeFragmentShader("light.frag",NULL);
-		
 		shaderLightprogram = makeProgram(shaderVLight, shaderFLight);
-		 
-		printf("program : %d\n",shaderLightprogram);
 		
 		lfUNIv3eyepos = glGetUniformLocation (shaderLightprogram, "eyepos");
-		printf("lfUNIv3eyepos : %d\n",lfUNIv3eyepos);
 		
-		//spherepoints = (p3d*)malloc(sizeof(p3d)*pnum);
-		
-		makePlane(100,100,planewidthseg,planeheightseg,&planepoints, &planeindices, 0);
-
 		unsigned int pnum = spherePointnum(sphereSmoothness);
 		unsigned int slicenum = sphereVertNumPerSlice(sphereSmoothness);
 		unsigned int facenum = sphereFaceNum(sphereSmoothness);
@@ -641,10 +612,36 @@ void initialize ()
 		makeSphereObject(sphereSmoothness, sphereradius, &spherevertices, &sphereindices );
 		meshSphere = new myMesh();
 		
-		
 		meshSphere->setItsShaderProgram(shaderLightprogram);
 		meshSphere->setVAO(spherevertices, pnum, sphereindices, facenum * 3);
 		meshSphere->setMaterial( spheremat );
+		
+		///plane.....
+		shaderVChecker = makeVertexShader("checker.vert",NULL);
+		shaderFChecker = makeFragmentShader("checker.frag",NULL);
+		shaderCheckProgram = makeProgram(shaderVChecker, shaderFChecker);
+		
+		//makePlane(100,100,planewidthseg,planeheightseg,&planepoints, &planeindices, 0);
+		makePlaneObject(planeWidthlen, planeHeightlen, planeWidthSeg, planeHeightSeg, &planevertices, &planeindices, 0);
+		for(i=0;i<planePointnum(planeWidthSeg, planeHeightSeg);i++)
+		{
+				printf("plane vert : %4.1f %4.1f %4.1f\n"
+					   , planevertices[i].position[0]
+					   , planevertices[i].position[1]
+					   , planevertices[i].position[2]);
+		}
+		for(i=0;i<planeIndicesNum(planeWidthSeg, planeHeightSeg);i+=3)
+		{
+				printf("plane index : %d %d %d\n"
+					   , planeindices[i]
+					   , planeindices[i+1]
+					   , planeindices[i+2]
+					   );
+		}
+		meshPlane = new myMesh();
+		meshPlane->setItsShaderProgram(shaderCheckProgram);
+		meshPlane->setVAO(planevertices, planePointnum(planeWidthSeg, planeHeightSeg), planeindices, planeIndicesNum(planeWidthSeg, planeHeightSeg));
+		meshPlane->setMaterial( planemat );
 		
 		printOpenGLError();
 		puts("init end");
@@ -707,8 +704,8 @@ int main(int argc, char **argv)
 		releasep2darr(sunpoints, sunpnum);
 }
 #endif
-		releasep3darr(planepoints, planePointnum(planewidthseg, planeheightseg));
-		//releasep3darr(spherepoints,spherePointnum(sphereSmoothness));
+
+		free(planeindices);
 		free(sphereindices);
 		return 0;
 }
