@@ -148,11 +148,11 @@ GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLui
 		{
 				location = glGetAttribLocation(program, parameters[i].varname);
 				printf("%s found at %d\n", parameters[i].varname, location);
-				glEnableVertexAttribArray(i);
+				glEnableVertexAttribArray(parameters[i].location);
 				printf("binding vbo buffer : %d\n", *buffer);
 				glBindBuffer(GL_ARRAY_BUFFER, *buffer);
 				printf("structsize %d, offset %d\n", structSize, parameters[i].offset);
-				glVertexAttribPointer(i, parameters[i].elementnum, parameters[i].type,parameters[i].willNormalize, structSize, parameters[i].offset);
+				glVertexAttribPointer(parameters[i].location, parameters[i].elementnum, parameters[i].type,parameters[i].willNormalize, structSize, parameters[i].offset);
 		}
 }
 

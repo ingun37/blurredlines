@@ -8,6 +8,7 @@
 typedef struct VAOparameterRaw
 {
 		char varname[128];
+		int location;
 		int elementnum;
 		GLenum type;
 		int willNormalize;

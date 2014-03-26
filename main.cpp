@@ -69,7 +69,7 @@ static GLuint vao=0;
 static GLuint buffPosition=0, buffIndex=0, buffNormal=0, buffvertexarr;
 static GLint lvATTv3normalvector, lvUNIm4x4modelviewmatrix, lfUNIv3lightdir, lfUNIv3Lirradiance, lfUNIv3eyepos, lfUNIv3specc, lfUNIv3spherecenter, lvATTv4position=0, lvATTv4normal=0, lvATTiIndex=0;
 static unsigned short* sphereindices;
-static const unsigned int sphereSmoothness = 2;
+static const unsigned int sphereSmoothness = 20;
 static const float sphereradius = 2;
 static Vertex* spherevertices;
 //light1은 directional
@@ -606,21 +606,10 @@ void initialize ()
 		
 		shaderVLight = makeVertexShader("light.vert",NULL);
 		shaderFLight = makeFragmentShader("light.frag",NULL);
-		/*
-		shaderLightprogram = glCreateProgram();
-		glAttachShader(shaderLightprogram, shaderVLight);
-		glAttachShader(shaderLightprogram, shaderFLight);
-		glLinkProgram(shaderLightprogram);
-		*/
+		
 		shaderLightprogram = makeProgram(shaderVLight, shaderFLight);
 		printf("program : %d\n",shaderLightprogram);
-		
-		//lvATTv3normalvector = glGetAttribLocation( shaderLightprogram, "normalvector");
-		//lfUNIv3lightdir = glGetUniformLocation( shaderLightprogram, "lightdir");
-		//lfUNIv3Lirradiance = glGetUniformLocation (shaderLightprogram, "Lirradiance");
 		lfUNIv3eyepos = glGetUniformLocation (shaderLightprogram, "eyepos");
-		//lfUNIv3specc = glGetUniformLocation (shaderLightprogram, "specc");
-		//lfUNIv3spherecenter = glGetUniformLocation (shaderLightprogram, "spherecenter");
 		printf("lfUNIv3eyepos : %d\n",lfUNIv3eyepos);
 		
 		//spherepoints = (p3d*)malloc(sizeof(p3d)*pnum);
@@ -653,6 +642,7 @@ void initialize ()
 		VAOparameter infos[2];
 		memset(infos[0].varname, 0, sizeof(infos[0].varname));
 		strncpy(infos[0].varname, "position", 8);
+		infos[0].location = 0;
 		infos[0].elementnum = 3;
 		infos[0].type = GL_FLOAT;
 		infos[0].willNormalize = 0;
@@ -660,6 +650,7 @@ void initialize ()
 		
 		memset(infos[1].varname, 0, sizeof(infos[1].varname));
 		strncpy(infos[1].varname, "normal", 6);
+		infos[1].location = 1;
 		infos[1].elementnum = 3;
 		infos[1].type = GL_FLOAT;
 		infos[1].willNormalize = 1;
