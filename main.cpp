@@ -646,37 +646,6 @@ void initialize ()
 		meshSphere->setVAO(spherevertices, pnum, sphereindices, facenum * 3);
 		meshSphere->setMaterial( spheremat );
 		
-		/*
-		glGenVertexArraysAPPLE(1, &vao);
-		glBindVertexArrayAPPLE(vao);
-
-		VAOparameter infos[2];
-		memset(infos[0].varname, 0, sizeof(infos[0].varname));
-		strncpy(infos[0].varname, "position", 8);
-		infos[0].location = 0;
-		infos[0].elementnum = 3;
-		infos[0].type = GL_FLOAT;
-		infos[0].willNormalize = 0;
-		infos[0].offset = (unsigned char*)NULL + 0;
-		
-		memset(infos[1].varname, 0, sizeof(infos[1].varname));
-		strncpy(infos[1].varname, "normal", 6);
-		infos[1].location = 1;
-		infos[1].elementnum = 3;
-		infos[1].type = GL_FLOAT;
-		infos[1].willNormalize = 1;
-		infos[1].offset = (unsigned char*)NULL + (sizeof(float) * 3);
-		
-		makeVAOBufferToAttribute(infos, 2, shaderLightprogram, &buffvertexarr, spherevertices, sizeof(Vertex), pnum);
-		
-
-
-		makeVertexArrayIndexBuffer(  &buffIndex, sphereindices, facenum * 3);
-
-		//printf("lvATTv4position : %d, buffPosition : %d\n", lvATTv4position, buffPosition);
-		
-		glBindVertexArrayAPPLE(0);
-		 */
 		printOpenGLError();
 		puts("init end");
 		
