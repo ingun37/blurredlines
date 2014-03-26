@@ -13,8 +13,8 @@
 #include "vertex.h"
 #include "myshader.h"
 #include "myshapes.h"
-//#include "mymesh.h"
-
+#include "mymesh.h"
+#include "materialProperties.h"m
 #define KEY_ESCAPE 27
 //#define PI 3.141592
 #define D360 (PI*2)
@@ -66,7 +66,7 @@ static GLuint shaderFLight;
 static GLuint shaderVLight;
 static GLuint shaderLightprogram;
 
-//static myMesh* meshSphere;
+static myMesh* meshSphere;
 
 static GLuint vao=0;
 static GLuint buffIndex=0, buffvertexarr;
@@ -80,6 +80,15 @@ static Vertex* spherevertices;
 static GLfloat sphereMaterialDiffuse[] = {0.7f,0.2f,0.4f,1};
 static GLfloat sphereMaterialAmbient[] = {0.7f,0.2f,0.4f,1};
 static GLfloat sphereMaterialSpecular[] = {1.f,1.f,1.f,1};
+
+static MaterialProperties spheremat =
+{
+		{0.7f,0.2f,0.4f,1},
+		{0.7f,0.2f,0.4f,1},
+		{1.f,1.f,1.f,1},
+		20.f,
+};
+
 static GLfloat light1Ambient[] = {0.2f,0.2f,0.2f,1};
 static GLfloat light1Diffuse[] = {1,1,1,1};
 static GLfloat light1specular[] = {0.3f,0.3f,0.3f,1};
@@ -384,16 +393,23 @@ void display()
 		glUniform3f(lfUNIv3eyepos, eyepos[0], eyepos[1], eyepos[2]);
 		glUniform3f(lfUNIv3spherecenter, 0,0,-10);
 		
+		
+		meshSphere->render();
+		
+		/*
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, sphereMaterialDiffuse);
 		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, sphereMaterialSpecular);
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, sphereMaterialAmbient);
 		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.f);
 		
 		
-		glBindVertexArrayAPPLE(vao);
-		glDrawElements(GL_TRIANGLES, sphereFaceNum(sphereSmoothness) * 3 * sizeof(short), GL_UNSIGNED_SHORT, NULL);
-		//glDrawArrays(GL_TRIANGLES, 0, 10);
+		//glBindVertexArrayAPPLE(vao);
+		
+		
+		glBindVertexArrayAPPLE(meshSphere->getVAO());
+		glDrawElements(GL_TRIANGLES, meshSphere->getInum() * sizeof(short), GL_UNSIGNED_SHORT, NULL);
 		glBindVertexArrayAPPLE(0);
+		 */
 		/*
 		glBegin(GL_TRIANGLES);
 		
@@ -600,16 +616,15 @@ void initialize ()
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
 		
-		unsigned int pnum = spherePointnum(sphereSmoothness);
-		unsigned int slicenum = sphereVertNumPerSlice(sphereSmoothness);
-		unsigned int facenum = sphereFaceNum(sphereSmoothness);
-		float tmpradius, tmpangle, tmpheight;
+		
 		
 		shaderVLight = makeVertexShader("light.vert",NULL);
 		shaderFLight = makeFragmentShader("light.frag",NULL);
 		
 		shaderLightprogram = makeProgram(shaderVLight, shaderFLight);
+		 
 		printf("program : %d\n",shaderLightprogram);
+		
 		lfUNIv3eyepos = glGetUniformLocation (shaderLightprogram, "eyepos");
 		printf("lfUNIv3eyepos : %d\n",lfUNIv3eyepos);
 		
@@ -617,9 +632,21 @@ void initialize ()
 		
 		makePlane(100,100,planewidthseg,planeheightseg,&planepoints, &planeindices, 0);
 
+		unsigned int pnum = spherePointnum(sphereSmoothness);
+		unsigned int slicenum = sphereVertNumPerSlice(sphereSmoothness);
+		unsigned int facenum = sphereFaceNum(sphereSmoothness);
+		
+		float tmpradius, tmpangle, tmpheight;
 		
 		makeSphereObject(sphereSmoothness, sphereradius, &spherevertices, &sphereindices );
+		meshSphere = new myMesh();
 		
+		
+		meshSphere->setItsShaderProgram(shaderLightprogram);
+		meshSphere->setVAO(spherevertices, pnum, sphereindices, facenum * 3);
+		meshSphere->setMaterial( spheremat );
+		
+		/*
 		glGenVertexArraysAPPLE(1, &vao);
 		glBindVertexArrayAPPLE(vao);
 
@@ -649,6 +676,7 @@ void initialize ()
 		//printf("lvATTv4position : %d, buffPosition : %d\n", lvATTv4position, buffPosition);
 		
 		glBindVertexArrayAPPLE(0);
+		 */
 		printOpenGLError();
 		puts("init end");
 		

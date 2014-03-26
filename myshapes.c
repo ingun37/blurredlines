@@ -129,13 +129,6 @@ int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, un
 		p3d* normals;
 		makeSphereVerticesAndIndices(smoothness, radius, spherepoints, tmpindices, &normals);
 		
-		puts("asdf");
-		for (i=0;i<facenum*3;i++)
-		{
-				printf("%d ",tmpindices[i]);
-		}
-		puts("asdf");
-		
 		if(indices)
 		{
 				printf("fdas	%d\n",tmpindices);

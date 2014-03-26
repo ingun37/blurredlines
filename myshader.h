@@ -25,6 +25,9 @@ GLuint makeFragmentShader(char* path, GLint *perror);
 GLint makeVertexArrayIndexBuffer( GLuint* buffer,unsigned short* data, unsigned int arraylen);
 
 GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLuint program, GLuint* buffer, void* data, int structSize, unsigned int arraylen);
+
+GLint makeVAOBufferOnly( GLuint* buffer, void* data, int structSize, unsigned int arraylen);
+VAOparameter* getFixedVAOParameters();
 GLuint makeProgram(GLuint attachingVertexShader, GLuint attachingFragmentShader);
 #ifdef __cplusplus
 }
