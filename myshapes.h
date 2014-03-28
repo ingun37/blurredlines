@@ -20,10 +20,10 @@ extern "C"{
 typedef struct Vertexraw Vertex;
 int makeSphereVerticesAndIndices(unsigned int smoothness,float radius, float **vertices, unsigned short *indices, float*** normals);
 		
-int makePlaneObject(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, Vertex** vertices, unsigned short** indices, int isClockwise);
+int makePlaneObject(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, Vertex** vertices, unsigned short** indices, int isClockwise, unsigned int* pvnum, unsigned int* pinum);
 		
 int makePlane(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, float*** vertices, unsigned short** indices, int isClockwise);
-int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, unsigned short** indices);
+int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, unsigned short** indices, unsigned int* pvnum, unsigned int* pinum);
 		
 int makeSphereForTextureObject(unsigned int smoothness,float radius, Vertex** vertices, unsigned short** indices);
 #ifdef __cplusplus

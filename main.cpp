@@ -622,12 +622,13 @@ void initialize ()
 		lfUNIv3eyepos = glGetUniformLocation (shaderLightprogram, "eyepos");
 		
 		//reduced vertex sphere.....
-		unsigned int pnum = spherePointnum(sphereSmoothness);
-		unsigned int facenum = sphereFaceNum(sphereSmoothness);
-		makeSphereObject(sphereSmoothness, sphereradius, &spherevertices, &sphereindices );
+		unsigned int pnum;
+		unsigned int inum;
+		
+		makeSphereObject(sphereSmoothness, sphereradius, &spherevertices, &sphereindices ,&pnum,&inum);
 		meshSphere = new myMesh();
 		meshSphere->setItsShaderProgram(shaderLightprogram);
-		meshSphere->setVAO(spherevertices, pnum, sphereindices, facenum * 3);
+		meshSphere->setVAO(spherevertices, pnum, sphereindices, inum);
 		meshSphere->setMaterial( spheremat );
 		
 		
@@ -642,12 +643,12 @@ void initialize ()
 		//이 아랫놈은 3.0부터 가능한거
 		//glProgramUniform1i((GLuint)shaderTexUnlitProgram, (GLint)lfUNIitex, (GLint)0);
 		
-		makePlaneObject(planeWidthlen, planeHeightlen, planeWidthSeg, planeHeightSeg, &planevertices, &planeindices, 0);
+		makePlaneObject(planeWidthlen, planeHeightlen, planeWidthSeg, planeHeightSeg, &planevertices, &planeindices, 0, &pnum, &inum);
 		
 		meshPlane = new myMesh();
 		//meshPlane->setItsShaderProgram(shaderCheckProgram);
 		meshPlane->setItsShaderProgram(shaderTexUnlitProgram);
-		meshPlane->setVAO(planevertices, planePointnum(planeWidthSeg, planeHeightSeg), planeindices, planeIndicesNum(planeWidthSeg, planeHeightSeg));
+		meshPlane->setVAO(planevertices, pnum, planeindices, inum);
 		meshPlane->setMaterial( planemat );
 		meshPlane->setTexidByPath("plane.png", GL_TEXTURE0);
 		
@@ -667,23 +668,7 @@ void terminate()
 		free(planeindices);
 		free(sphereindices);
 		
-		/*
-		glDetachShader(shaderCheckProgram, shaderVChecker);
-		glDetachShader(shaderCheckProgram, shaderFChecker);
-		
-		glDeleteShader(shaderFChecker);
-		glDeleteShader(shaderVChecker);
-		
-		glDeleteProgram(shaderCheckProgram);
-		
-		glDetachShader(shaderLightprogram, shaderVLight);
-		glDetachShader(shaderLightprogram, shaderFLight);
-		
-		glDeleteShader(shaderVLight);
-		glDeleteShader(shaderFLight);
-		
-		glDeleteProgram(shaderLightprogram);
-		*/
+
 		delete meshPlane;
 		delete meshSphere;
 		

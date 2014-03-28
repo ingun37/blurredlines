@@ -48,7 +48,7 @@ int makePlane(float widthLen, float heightLen, unsigned int widthSeg, unsigned i
 		}
 		return 0;
 }
-int makePlaneObject(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, Vertex** vertices, unsigned short** indices, int isClockwise)
+int makePlaneObject(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, Vertex** vertices, unsigned short** indices, int isClockwise, unsigned int *pnumVertices, unsigned int *pnumIndices)
 {
 		float** tmpvert;
 		int i;
@@ -71,6 +71,11 @@ int makePlaneObject(float widthLen, float heightLen, unsigned int widthSeg, unsi
 				(*vertices)[i].uv[1] = ((float)(i/(widthSeg+1)))/heightSeg;
 
 		}
+		
+		if(pnumVertices)
+				*pnumVertices = vnum;
+		if(pnumIndices)
+				*pnumIndices = widthSeg*heightSeg*6;
 		return 0;
 }
 int makeSphereVerticesAndIndices(unsigned int smoothness,float radius, float **vertices, unsigned short *indices, float*** normals)
@@ -142,7 +147,7 @@ int makeSphereVerticesAndIndices(unsigned int smoothness,float radius, float **v
 		return 0;
 }
 
-int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, unsigned short** indices)
+int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, unsigned short** indices, unsigned int* pvnum, unsigned int* pinum)
 {
 		int i;
 		unsigned int pnum = spherePointnum(smoothness);
@@ -177,6 +182,10 @@ int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, un
 		}
 		if(indices == NULL)
 				free(tmpindices);
+		if(pvnum)
+				*pvnum = pnum;
+		if(pinum)
+				*pinum = facenum*3;
 		releasep3darr(spherepoints, pnum);
 }
 
