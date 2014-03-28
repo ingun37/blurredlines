@@ -20,43 +20,56 @@ myMesh::myMesh()
 		vbo = NULL;
 		numVertices = 0;
 		numIndices = 0;
+
 }
 
 myMesh::~myMesh()
 {
+		puts("deleteing mesh");
 		free(materialproperties);
+		this->release();
 }
 int myMesh::render()
 {
+		std::list<texidUnitPair*>::iterator itor;
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, materialproperties->diffuse);
 		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, materialproperties->specular);
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, materialproperties->ambient);
 		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, materialproperties->shininess);
 		
+		if(program)
+		{
+				for(itor = texunitpairs.begin(); itor !=texunitpairs.end(); itor++)
+				{
+						glActiveTexture((*itor)->unit);
+						glBindTexture(GL_TEXTURE_2D, (*itor)->texid );
+				}
+		}
 		glBindVertexArrayAPPLE(vao);
 		glDrawElements(GL_TRIANGLES, numIndices * sizeof(short), GL_UNSIGNED_SHORT, NULL);
 		glBindVertexArrayAPPLE(0);
 }
+
 int myMesh::setMaterial( MaterialProperties mat)
 {
 		memcpy(materialproperties, &mat, sizeof(MaterialProperties));
 }
-int myMesh::setShader(char* vshadername, char* fshadername)
+void myMesh::setTexid(unsigned int texid, unsigned int texUnitnum)
 {
-		if(vshadername == NULL || fshadername == NULL)
-				return -1;
-
-		vshader = makeVertexShader(vshadername, NULL);
-		fshader = makeVertexShader(fshadername, NULL);
+		texidUnitPair* pair = (texidUnitPair*)malloc(sizeof(texidUnitPair));
+		pair->texid = texid;
+		pair->unit = texUnitnum;
+		texunitpairs.push_back(pair);
 		
-		if(vshader <1 || fshader < 1)
-				return -1;
-		
-		program = makeProgram(vshader, fshader);
-		
-		if(program < 1)
-				return -1;
-		return 0;
+}
+void myMesh::setTexidByPath(char* path, unsigned int texUnitnum)
+{
+		int texid;
+		if(path)
+		{
+				texid = makeTexture(path,NULL,NULL);
+				this->setTexid(texid, texUnitnum);
+		}
 		
 }
 
@@ -85,8 +98,9 @@ int myMesh::setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum)
 		
 		if(program)
 		{
-				makeVAOBufferToAttribute(getFixedVAOParameters(), getNumFixedVAOParameters(), program, &vbo, pv, sizeof(Vertex), vnum);
+				makeVAOBufferToAttribute(getFixedVAOParameters(), getNumFixedVAOParameters(), &vbo, pv, sizeof(Vertex), vnum);
 		}
+		
 		else
 				makeVAOBufferOnly(&vbo, pv, sizeof(Vertex), vnum);
 		
@@ -97,4 +111,33 @@ int myMesh::setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum)
 		glBindVertexArrayAPPLE(0);
 		
 		return 0;
+}
+
+void myMesh::release()
+{
+		if(vbo)
+		{
+				glDeleteBuffers(1,&vbo);
+				vbo = 0;
+		}
+		if(ibo)
+		{
+				glDeleteBuffers(1,&ibo);
+				ibo = 0;
+		}
+		if(vao)
+		{
+				glDeleteVertexArraysAPPLE(1,&vao);
+				vao = 0;
+		}
+		
+		std::list<texidUnitPair*>::iterator itor;
+		
+		if(program)
+		{
+				for(itor = texunitpairs.begin(); itor !=texunitpairs.end(); itor++)
+				{
+						free(*itor);
+				}
+		}
 }

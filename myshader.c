@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "myshader.h"
+#include "lodepng.h"
 int printError(char* file, int line)
 {
 		GLenum glErr;
@@ -110,7 +111,7 @@ GLint makeVertexArrayBufferToAttribute(char* varname, GLint *location, GLuint pr
 		if(buffer == NULL) return 1;
 		//attribute변수 위치 받아오고...
 		*location = glGetAttribLocation( program, varname);
-		printf("%d %s %d\n",program,varname,*location);
+
 		//버퍼 한개 만들어서 아이디 buffer에 집어넣고..
 		glGenBuffers(1,buffer);
 		printOpenGLError();
@@ -175,10 +176,10 @@ VAOparameter* getFixedVAOParameters()
 		}
 		return fixedparameters;
 }
-GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLuint program, GLuint* buffer, void* data, int structSize, unsigned int arraylen)
+GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLuint* buffer, void* data, int structSize, unsigned int arraylen)
 {
 		int i;
-		int location;
+		//int location;
 		/*
 		glGenBuffers(1, buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, *buffer);
@@ -187,12 +188,12 @@ GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLui
 		makeVAOBufferOnly(buffer, data, structSize, arraylen);
 		for(i=0;i<parameternum;i++)
 		{
-				location = glGetAttribLocation(program, parameters[i].varname);
-				printf("%s found at %d\n", parameters[i].varname, location);
+				//location = glGetAttribLocation(program, parameters[i].varname);
+
 				glEnableVertexAttribArray(parameters[i].location);
-				printf("binding vbo buffer : %d\n", *buffer);
+
 				glBindBuffer(GL_ARRAY_BUFFER, *buffer);
-				printf("structsize %d, offset %d\n", structSize, parameters[i].offset);
+
 				glVertexAttribPointer(parameters[i].location, parameters[i].elementnum, parameters[i].type,parameters[i].willNormalize, structSize, parameters[i].offset);
 		}
 }
@@ -233,3 +234,36 @@ GLint makeVertexArrayIndexBuffer( GLuint* buffer,unsigned short* data, unsigned 
 		//printOpenGLError();
 }
 
+GLuint makeTexture(char* path, unsigned int *pwidth, unsigned int *pheight)
+{
+		unsigned error;
+		unsigned char* image;
+		unsigned width, height;
+		GLuint textureID;
+		//lodepng사이트 가보면 파일을 메모리로 먼저 로드하고 하는 방법도있음.
+		error = lodepng_decode32_file(&image, &width, &height, path);
+		if(error)
+		{
+				printf("lodepng error : %u : %s\n", error, lodepng_error_text(error));
+				return -1;
+		}
+		else
+				printf("loadpng success width : %d height : %d\n",width,height);
+
+		if(pwidth)
+				*pwidth = width;
+		if(pheight)
+				*pheight = height;
+		
+		glGenTextures(1,&textureID);
+		printf("gen tex success texid : %d\n", textureID);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+		
+		puts("freeing image.....");
+		free(image);
+		return textureID;
+		
+}

@@ -20,7 +20,7 @@ int makePlane(float widthLen, float heightLen, unsigned int widthSeg, unsigned i
 						tmpv[i*widthvnum + j][2] = i*(heightLen/heightSeg) - heightLen/2;;
 				}
 		}
-		*indices = (int*)malloc(sizeof(int) * widthSeg * heightSeg * 6);
+		*indices = (unsigned short*)malloc(sizeof(short) * widthSeg * heightSeg * 6);
 		tmpi = *indices;
 		for (i=0; i<heightSeg; i++)
 		{
@@ -69,7 +69,7 @@ int makePlaneObject(float widthLen, float heightLen, unsigned int widthSeg, unsi
 				
 				(*vertices)[i].uv[0] = ((float)(i%(widthSeg+1)))/widthSeg;
 				(*vertices)[i].uv[1] = ((float)(i/(widthSeg+1)))/heightSeg;
-				printf("%f %f\n",(*vertices)[i].uv[0],(*vertices)[i].uv[1]);
+
 		}
 		return 0;
 }
@@ -80,6 +80,7 @@ int makeSphereVerticesAndIndices(unsigned int smoothness,float radius, float **v
 		int pnum = spherePointnum(smoothness);
 		int slicenum = sphereVertNumPerSlice(smoothness);
 		int facenum = sphereFaceNum(smoothness);
+		
 		vertices[0][0] = 0;
 		vertices[0][1] = radius;
 		vertices[0][2] = 0;
@@ -156,7 +157,6 @@ int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, un
 		
 		if(indices)
 		{
-				printf("fdas	%d\n",tmpindices);
 				*indices = tmpindices;
 		}
 		if(vertices)
@@ -178,4 +178,59 @@ int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, un
 		if(indices == NULL)
 				free(tmpindices);
 		releasep3darr(spherepoints, pnum);
+}
+
+int makeSphereForTextureObject(unsigned int smoothness,float radius, Vertex** vertices, unsigned short** indices)
+{
+		unsigned int pnum = sphereForTexturePointnum(smoothness);
+		unsigned int slicenum = sphereForTextureVertNumPerSlice(smoothness);
+		unsigned int idxnum = sphereForTextureIndicesNum(smoothness);
+		
+		unsigned short *tmpi;
+		Vertex* tmpv;
+		int i, j, *idx;
+		float tmpangle, tmpradius, tmpheight;
+		
+		tmpangle = PI/(smoothness+1);
+		
+		(*vertices) = (Vertex*)malloc(sizeof(Vertex)*pnum);
+		tmpv = *vertices;
+		tmpangle = PI/(smoothness+1);
+		
+		for(i=0;i<smoothness+2;i++)
+		{
+				tmpradius = sinf(tmpangle * i) * radius;
+				tmpheight = cosf(tmpangle * i) * radius;
+				for(j=0;j<slicenum;j++)
+				{
+						tmpv[i*slicenum + j].position[0] = cosf(tmpangle * j) * tmpradius;
+						tmpv[i*slicenum + j].position[1] = tmpheight;
+						tmpv[i*slicenum + j].position[2] = sinf(tmpangle * j) * tmpradius;
+						
+						tmpv[i*slicenum + j].normal[0] = tmpv[i*slicenum + j].position[0]/radius;
+						tmpv[i*slicenum + j].normal[1] = tmpv[i*slicenum + j].position[1]/radius;
+						tmpv[i*slicenum + j].normal[2] = tmpv[i*slicenum + j].position[2]/radius;
+						
+						tmpv[i*slicenum + j].uv[0] = ((float)slicenum-1)/j;
+						tmpv[i*slicenum + j].uv[1] = ((float)smoothness+2-1)/i;
+						
+				}
+		}
+		*indices = (unsigned short*)malloc(sizeof(short) * idxnum);
+		tmpi = *indices;
+		for(i=0;i<smoothness+2-1;i++)
+		{
+				for(j=0;j<slicenum-1;j++)
+				{
+						tmpi[6*(i*(slicenum-1)+j) + 0] = i * slicenum + j;
+						tmpi[6*(i*(slicenum-1)+j) + 1] = i * slicenum + (j+1);
+						tmpi[6*(i*(slicenum-1)+j) + 2] = (i+1) * slicenum + j;
+						
+						tmpi[6*(i*(slicenum-1)+j) + 3] = i * slicenum + j+1;
+						tmpi[6*(i*(slicenum-1)+j) + 4] = (i+1) * slicenum + (j+1);
+						tmpi[6*(i*(slicenum-1)+j) + 5] = (i+1) * slicenum + j;
+				}
+		}
+		
+		return 0;
 }

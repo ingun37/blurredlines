@@ -2,9 +2,10 @@
 //#define renderGlow
 #include <stdio.h>
 #include <stdlib.h>
-#define GLFW_INCLUDE_GLU
-#include <GLFW/glfw3.h>
+//#include <glew.h>
+#include <OpenGL/gl.h>
 
+#include <GLUT/glut.h>
 #include <math.h>
 #include <time.h>
 #include <string.h>
@@ -18,12 +19,6 @@
 //#define PI 3.141592
 #define D360 (PI*2)
 #define A2R(a) (D360*(((float)a)/360))
-
-const int winwidth = 2048;
-const int winheight = 512;
-const float winangle = 45;
-const float winnear = 1;
-const float winfar = 500;
 static float eyepos[3] = {0,6,15};
 static float lookat[3] = {0,1,0};
 
@@ -141,10 +136,10 @@ void markAt(p2d *arr, unsigned int num)
 }
 void markAt3(p3d p)
 {
-		
+
 		static float ra=0;
 		ra +=0.1f;
-		
+
 		{
 				glPushMatrix();
 				
@@ -182,7 +177,17 @@ void drawBezier(p2d* bezierpoints, unsigned int num, int smooth)
 		}
 		glEnd();
 }
+typedef struct {
+		int width;
+		int height;
+		char* title;
+		
+		float field_of_view_angle;
+		float z_near;
+		float z_far;
+} glutWindow;
 
+glutWindow win;
 
 void update()
 {
@@ -193,93 +198,93 @@ void update()
 		p2d tmpp, tmpp2;
 #ifdef renderBezier
 		{
-				for (i=0;i<exlinesnum;i++)
-				{
-						exlines[i] = copyp2darr(points, pointnum);
-				}
+		for (i=0;i<exlinesnum;i++)
+		{
+				exlines[i] = copyp2darr(points, pointnum);
+		}
+		
+		for (i=0;i<pointnum;i++)
+		{
+				randres = rand()%2;
+				tmp = powf(-1, (float)randres);
 				
-				for (i=0;i<pointnum;i++)
-				{
-						randres = rand()%2;
-						tmp = powf(-1, (float)randres);
-						
-						points[i][1] += tmp*0.04f;
-						
-						for(j=0;j<exlinesnum;j++)
-						{
-								//exlines[j][i][1] += tmp* 0.04*(pow(j*5,1 + ((float)j/exlinesnum)*0.5)) * ((i!=pointnum-1) & 1);
-								exlines[j][i][1] += tmp* 0.04*(j*1) * ((i%(pointnum-1)) & 1);
-						}
-				}
+				points[i][1] += tmp*0.04f;
 				
-				
-				for (i=0;i<exmoonlinesnum;i++)
+				for(j=0;j<exlinesnum;j++)
 				{
-						moonexlines[i] = copyp2darr(moonpoints, moonpnum);
+						//exlines[j][i][1] += tmp* 0.04*(pow(j*5,1 + ((float)j/exlinesnum)*0.5)) * ((i!=pointnum-1) & 1);
+						exlines[j][i][1] += tmp* 0.04*(j*1) * ((i%(pointnum-1)) & 1);
 				}
+		}
+		
+		
+		for (i=0;i<exmoonlinesnum;i++)
+		{
+				moonexlines[i] = copyp2darr(moonpoints, moonpnum);
+		}
+		
+		for (i=0;i<moonpnum;i++)
+		{
+				randres = rand()%2;
+				tmp = powf(-1, (float)randres);
 				
-				for (i=0;i<moonpnum;i++)
-				{
-						randres = rand()%2;
-						tmp = powf(-1, (float)randres);
-						
-						moonpoints[i][0] += tmp*0.01f;
-						
-						for(j=0;j<exmoonlinesnum;j++)
-						{
-								
-								moonexlines[j][i][0] += tmp* 0.02*(pow(j*1,1 + ((float)j/exmoonlinesnum)*0.5))* ((i%(moonpnum-1)) & 1);
-						}
-				}
+				moonpoints[i][0] += tmp*0.01f;
 				
-				for (i=0;i<sunexlinesnum;i++)
+				for(j=0;j<exmoonlinesnum;j++)
 				{
-						sunexlines[i] = copyp2darr(sunpoints, sunpnum);
+
+						moonexlines[j][i][0] += tmp* 0.02*(pow(j*1,1 + ((float)j/exmoonlinesnum)*0.5))* ((i%(moonpnum-1)) & 1);
 				}
+		}
+		
+		for (i=0;i<sunexlinesnum;i++)
+		{
+				sunexlines[i] = copyp2darr(sunpoints, sunpnum);
+		}
+		
+		for (i=0;i<sunpnum;i++)
+		{
+				randres = rand()%2;
+				tmp = powf(-1, (float)randres);
 				
-				for (i=0;i<sunpnum;i++)
-				{
-						randres = rand()%2;
-						tmp = powf(-1, (float)randres);
-						
-						tmpp = normalize(sunpoints[i]);
-						tmpp2 = scalarmul(tmpp, tmp*0.01f);
-						releasp2d(tmpp);
-						tmpp = addp2d(tmpp2, sunpoints[i]);
-						releasp2d(sunpoints[i]);
-						sunpoints[i] = tmpp;
-						
-				}
+				tmpp = normalize(sunpoints[i]);
+				tmpp2 = scalarmul(tmpp, tmp*0.01f);
+				releasp2d(tmpp);
+				tmpp = addp2d(tmpp2, sunpoints[i]);
+				releasp2d(sunpoints[i]);
+				sunpoints[i] = tmpp;
+				
+		}
 		}
 #endif
 #ifdef renderGlow
 		{
-				p3d start;
-				p3d end;
-				p3d dir;
-				float dist;
-				
-				
-				start = linearInterpolate3(glowingline[0],glowingline[1],0.5);
-				end = linearInterpolate3(glowingline[2],glowingline[3],0.5);
-				dir = direction3(start,end);
-				dist = distance3(glowingline[0],start);
-				
-				
-				glUniform1f(lfdist, dist);
-				glUniform3f(lv3start, start[0],start[1],start[2]);
-				glUniform3f(lv3dir,dir[0],dir[1],dir[2]);
-				
-				releasep3d(start);
-				releasep3d(end);
-				releasep3d(dir);
+		p3d start;
+		p3d end;
+		p3d dir;
+		float dist;
+
+
+		start = linearInterpolate3(glowingline[0],glowingline[1],0.5);
+		end = linearInterpolate3(glowingline[2],glowingline[3],0.5);
+		dir = direction3(start,end);
+		dist = distance3(glowingline[0],start);
+		
+		
+		glUniform1f(lfdist, dist);
+		glUniform3f(lv3start, start[0],start[1],start[2]);
+		glUniform3f(lv3dir,dir[0],dir[1],dir[2]);
+		
+		releasep3d(start);
+		releasep3d(end);
+		releasep3d(dir);
 		}
 #endif
 		/*
-		 releasep3d(start);
-		 releasep3d(end);
-		 releasep3d(dir);
-		 */
+		releasep3d(start);
+		releasep3d(end);
+		releasep3d(dir);
+		*/
 		
 		glLightfv(GL_LIGHT0, GL_AMBIENT, light1Ambient);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, light1Diffuse);
@@ -293,20 +298,20 @@ void update()
 void drawfinish()
 {
 #ifdef renderBezier
+{
+		int i;
+		for(i=0;i<exlinesnum;i++)
 		{
-				int i;
-				for(i=0;i<exlinesnum;i++)
-				{
-						releasep2darr(exlines[i], pointnum);
-						
-				}
-				//releasep2darr(points, pointnum);
+				releasep2darr(exlines[i], pointnum);
 				
-				for(i=0;i<exmoonlinesnum;i++)
-				{
-						releasep2darr(moonexlines[i], moonpnum);
-				}
 		}
+		//releasep2darr(points, pointnum);
+		
+		for(i=0;i<exmoonlinesnum;i++)
+		{
+				releasep2darr(moonexlines[i], moonpnum);
+		}
+}
 #endif
 }
 
@@ -327,68 +332,56 @@ void display()
 		gluLookAt(eyepos[0], eyepos[1], eyepos[2], lookat[0], lookat[1], lookat[2], 0, 1, 0);
 		
 		//glTranslatef(0.0f,0.0f,-10.0f);
-		
+
 		//markAt(points, pointnum);
 		//markAt(moonpoints, moonpnum);
 		
 		
 #ifdef renderBezier
-		{
+{
 				glPushMatrix();
-				
+
 				glUseProgram(0);
-				
+		
 				//glTranslatef(-3, 1, 0);
 				
 				//printf("%f\n",rotation);
 				glRotatef(rotation, 1, 0, 0);
 				glTranslatef(0.0f,0.0f,-10.0f);
-				
-				
-				
+		
+		
+		
 				glColor3f(0.9, 0.9, 0.3);
-				
-				
+		
+		
 				drawBezier(moonpoints, moonpnum, moonsmoothness);
 				for(i=0;i<exmoonlinesnum;i++)
-				drawBezier(moonexlines[i], moonpnum, moonsmoothness);
+						drawBezier(moonexlines[i], moonpnum, moonsmoothness);
 				glPopMatrix();
-				
+
 				glPushMatrix();
-				
-				
+		
+		
 				//glTranslatef(-3, 1, 0);
 				rotation =360 * ((float)(clockcurrent%10000000))/10000000 + 180;
 				glRotatef(rotation, 1, 0, 0);
 				glTranslatef(0.0f,0.0f,-10.0f);
-				
+		
 				glColor3f(0.9, 0.2, 0.3);
 				drawBezier(sunpoints, sunpnum, sunmoothness);
 				glPopMatrix();
-				
+
 				glTranslatef(0.0f,0.0f,-10.0f);
 				glColor3f(0.2, 0.3, 0.6);
 				drawBezier(points, pointnum, beziersmoothness);
 				for(i=0;i<exlinesnum;i++)
-				drawBezier(exlines[i], pointnum, beziersmoothness);
-		}
+						drawBezier(exlines[i], pointnum, beziersmoothness);
+}
 #endif
-		
-		/*
-		 glUseProgram(0);
-		 
-		 glPushMatrix();
-		 glTranslatef(0, sphereradius*2, 0);
-		 glRotatef(sinf(rotation*0.1)*260, 0, 1, 0);
-		 for(i=0;i<sphereForTexturePointnum(sphereSmoothness);i++)
-		 {
-		 markAt3(sphereTexvertices[i].position);
-		 }
-		 glPopMatrix();
-		 */
+
 		//render plane....
 		glUseProgram(shaderTexUnlitProgram);
-		
+
 		//glProgramUniform1i((GLuint)shaderTexUnlitProgram, lfUNIitex, 0);
 		glUniform1i(lfUNIitex, 0);
 		glPushMatrix();
@@ -398,13 +391,13 @@ void display()
 		meshPlane->render();
 		
 		glPopMatrix();
-		
+
 		
 		
 		
 		//render objects with light rpogram
 		glUseProgram(shaderLightprogram);
-		
+
 		glUniform3f(lfUNIv3eyepos, eyepos[0], eyepos[1], eyepos[2]);
 		glUniform3f(lfUNIv3spherecenter, 0,0,-10);
 		
@@ -420,92 +413,93 @@ void display()
 		
 #ifdef renderGlow
 		{
-				glUseProgram(shaderprogram);
-				
-				glPushMatrix();
-				
-				glTranslatef(0,sinf(rotation/1.5),-20);
-				glRotatef(rotation*4, 0,0,1);
-				
-				glUniform3f(lv3mycolor,0.9,0.2,0.6);
-				glUniform1f(lfmypow,2+sinf(rotation*3.2));
-				
-				glBegin(GL_QUADS);
-				
-				for( i=0;i<4;i++)
-				{
-						glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
-				}
-				
-				glEnd();
-				
-				glPopMatrix();
-				
-				
-				
-				glPushMatrix();
-				
-				glTranslatef(sinf(rotation*0.5),sinf(rotation*1.2),-20);
-				glRotatef(sinf(rotation*1.4)*40, 0,0,1);
-				
-				glUniform3f(lv3mycolor,0.1,0.9,0.4);
-				glUniform1f(lfmypow,2+sinf(rotation*5));
-				
-				glBegin(GL_QUADS);
-				
-				for( i=0;i<4;i++)
-				{
-						glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
-				}
-				
-				glEnd();
-				
-				glPopMatrix();
-				
-				
-				
-				glPushMatrix();
-				
-				glTranslatef(1.6*sinf(rotation*1.3),2*sinf(rotation*2),-20);
-				glRotatef(-sinf(rotation*0.2)*720, 0,0,1);
-				
-				glUniform3f(lv3mycolor,0.3,0.2,0.6);
-				glUniform1f(lfmypow,2+sinf(rotation*5));
-				
-				glBegin(GL_QUADS);
-				
-				for( i=0;i<4;i++)
-				{
-						glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
-				}
-				
-				glEnd();
-				
-				glPopMatrix();
-				
-				
-				
-				glPushMatrix();
-				
-				glTranslatef(10,0,-30);
-				glRotatef(-85, 0,1,0);
-				glScalef(40,1,1);
-				glUniform3f(lv3mycolor,1,1,1);
-				glUniform1f(lfmypow,2);
-				
-				glBegin(GL_QUADS);
-				
-				for( i=0;i<4;i++)
-				{
-						glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
-				}
-				
-				glEnd();
-				
-				glPopMatrix();
+		glUseProgram(shaderprogram);
+		
+		glPushMatrix();
+		
+		glTranslatef(0,sinf(rotation/1.5),-20);
+		glRotatef(rotation*4, 0,0,1);
+		
+		glUniform3f(lv3mycolor,0.9,0.2,0.6);
+		glUniform1f(lfmypow,2+sinf(rotation*3.2));
+		
+		glBegin(GL_QUADS);
+		
+		for( i=0;i<4;i++)
+		{
+				glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
+		}
+		
+		glEnd();
+		
+		glPopMatrix();
+		
+		
+		
+		glPushMatrix();
+		
+		glTranslatef(sinf(rotation*0.5),sinf(rotation*1.2),-20);
+		glRotatef(sinf(rotation*1.4)*40, 0,0,1);
+		
+		glUniform3f(lv3mycolor,0.1,0.9,0.4);
+		glUniform1f(lfmypow,2+sinf(rotation*5));
+		
+		glBegin(GL_QUADS);
+		
+		for( i=0;i<4;i++)
+		{
+				glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
+		}
+		
+		glEnd();
+		
+		glPopMatrix();
+		
+		
+		
+		glPushMatrix();
+		
+		glTranslatef(1.6*sinf(rotation*1.3),2*sinf(rotation*2),-20);
+		glRotatef(-sinf(rotation*0.2)*720, 0,0,1);
+		
+		glUniform3f(lv3mycolor,0.3,0.2,0.6);
+		glUniform1f(lfmypow,2+sinf(rotation*5));
+		
+		glBegin(GL_QUADS);
+		
+		for( i=0;i<4;i++)
+		{
+				glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
+		}
+		
+		glEnd();
+		
+		glPopMatrix();
+		
+		
+		
+		glPushMatrix();
+		
+		glTranslatef(10,0,-30);
+		glRotatef(-85, 0,1,0);
+		glScalef(40,1,1);
+		glUniform3f(lv3mycolor,1,1,1);
+		glUniform1f(lfmypow,2);
+		
+		glBegin(GL_QUADS);
+		
+		for( i=0;i<4;i++)
+		{
+				glVertex4f(glowingline[i][0], glowingline[i][1], glowingline[i][2],1);
+		}
+		
+		glEnd();
+		
+		glPopMatrix();
 		}
 #endif
-
+		glutSwapBuffers();
+		drawfinish();
 }
 
 void initialize ()
@@ -513,26 +507,26 @@ void initialize ()
 		int i, j;
 		float angle=(30.f/360)*2*(3.141592);
 		float range = 8;
-		
+
 		float term;
 		float tmp;
 		/*
-		 glewExperimental = GL_TRUE;
-		 glewInit();
-		 if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
-		 printf("ready for glsl\n");
-		 if(glewIsSupported("GL_VERSION_2_0"))
-		 puts("ready for opengl 2");
-		 */
+		glewExperimental = GL_TRUE;
+		glewInit();
+		if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
+				printf("ready for glsl\n");
+		if(glewIsSupported("GL_VERSION_2_0"))
+				puts("ready for opengl 2");
+		*/
 		glMatrixMode(GL_PROJECTION);												// select projection matrix
-		glViewport(0, 0, winwidth, winheight);									// set the viewport
+		glViewport(0, 0, win.width, win.height);									// set the viewport
 		glMatrixMode(GL_PROJECTION);												// set matrix mode
 		glLoadIdentity();															// reset projection matrix
-		GLfloat aspect = (GLfloat) winwidth / winheight;
-		gluPerspective(winangle, aspect, winnear, winfar);		// set up a perspective projection matrix
+		GLfloat aspect = (GLfloat) win.width / win.height;
+		gluPerspective(win.field_of_view_angle, aspect, win.z_near, win.z_far);		// set up a perspective projection matrix
 		glMatrixMode(GL_MODELVIEW);													// specify which matrix is the current matrix
-																					//glLoadIdentity();
-																					//gluLookAt(0, 0, 0, 0, 0, 100, 0, 1, 0);
+		//glLoadIdentity();
+		//gluLookAt(0, 0, 0, 0, 0, 100, 0, 1, 0);
 		glShadeModel( GL_SMOOTH );
 		glClearDepth( 1.0f );														// specify the clear value for the depth buffer
 																					//glEnable( GL_DEPTH_TEST );
@@ -541,67 +535,67 @@ void initialize ()
 		glClearColor(0.0, 0.0, 0.0, 1.0);											// specify clear values for the color buffers
 #ifdef renderBezier
 		{
-				points = (p2d*)malloc(sizeof(p2d)*pointnum);
-				
-				for (i=0; i<pointnum; i++)
-				{
-						points[i] = createp2d(linewidth * (i-pointnum/2), powf(-1,  (float)(i%2))* abs( ((float)(rand()%((int)range*10)))/(range*10)*range - range/2));
-				}
-				exlines = (p2d**)malloc(sizeof(p2d*)*exlinesnum);
-				
-				
-				moonpoints = (p2d*)malloc(sizeof(p2d)*moonpnum);
-				for(i=0;i<moonpnum;i++)
-				{
-						moonpoints[i] = createp2d(cosf(angle + A2R(60)*i) * moonradius, sinf(angle+A2R(60)*i) * moonradius);
-						//printf("%f %f\n", moonpoints[i][0], moonpoints[i][1]);
-				}
-				
-				moonpoints[0][1]*=0.8;
-				moonpoints[moonpnum-1][1]*=0.8;
-				moonpoints[0][0]*=0.5;
-				moonpoints[moonpnum-1][0]*=0.5;
-				
-				moonpoints[2][0] *= 1.4f;
-				moonpoints[3][0] *= 1.4f;
-				moonexlines = (p2d**)malloc(sizeof(p2d*)*exmoonlinesnum);
-				
-				
-				sunpoints = (p2d*)malloc(sizeof(p2d)*sunpnum);
-				
-				
-				angle = 0;
-				term = A2R(30);
-				for(i=0;i<sunpnum;i++)
-				{
-						tmp = sunradius + ((i%2) * (sunradius * 2 / sqrt(3) -sunradius));
-						sunpoints[i] = createp2d(cosf(term*i) * tmp, sinf(term*i) * tmp);
-				}
-				
-				sunexlines = (p2d**)malloc(sizeof(p2d*)*sunexlinesnum);
+		points = (p2d*)malloc(sizeof(p2d)*pointnum);
+		
+		for (i=0; i<pointnum; i++)
+		{
+				points[i] = createp2d(linewidth * (i-pointnum/2), powf(-1,  (float)(i%2))* abs( ((float)(rand()%((int)range*10)))/(range*10)*range - range/2));
+		}
+		exlines = (p2d**)malloc(sizeof(p2d*)*exlinesnum);
+		
+		
+		moonpoints = (p2d*)malloc(sizeof(p2d)*moonpnum);
+		for(i=0;i<moonpnum;i++)
+		{
+				moonpoints[i] = createp2d(cosf(angle + A2R(60)*i) * moonradius, sinf(angle+A2R(60)*i) * moonradius);
+				//printf("%f %f\n", moonpoints[i][0], moonpoints[i][1]);
+		}
+
+		moonpoints[0][1]*=0.8;
+		moonpoints[moonpnum-1][1]*=0.8;
+		moonpoints[0][0]*=0.5;
+		moonpoints[moonpnum-1][0]*=0.5;
+		
+		moonpoints[2][0] *= 1.4f;
+		moonpoints[3][0] *= 1.4f;
+		moonexlines = (p2d**)malloc(sizeof(p2d*)*exmoonlinesnum);
+		
+		
+		sunpoints = (p2d*)malloc(sizeof(p2d)*sunpnum);
+		
+		
+		angle = 0;
+		term = A2R(30);
+		for(i=0;i<sunpnum;i++)
+		{
+				tmp = sunradius + ((i%2) * (sunradius * 2 / sqrt(3) -sunradius));
+				sunpoints[i] = createp2d(cosf(term*i) * tmp, sinf(term*i) * tmp);
+		}
+		
+		sunexlines = (p2d**)malloc(sizeof(p2d*)*sunexlinesnum);
 		}
 #endif
 #ifdef renderGlow
 		{
-				glowingline = (p3d*)malloc(sizeof(p3d)*4);
-				
-				
-				glowingline[0] = createp3d(30, -2, -0);
-				glowingline[1] = createp3d(30, 2, -0);
-				glowingline[2] = createp3d(-30, 2, -0);
-				glowingline[3] = createp3d(-30, -2, -0);
-				shaderV = makeVertexShader("vert.vert",NULL);
-				shaderF = makeFragmentShader("frag.frag",NULL);
-				
-				shaderprogram = glCreateProgram();
-				glAttachShader(shaderprogram,shaderV);
-				glAttachShader(shaderprogram,shaderF);
-				glLinkProgram(shaderprogram);
-				
-				lv3start = glGetUniformLocation( shaderprogram,"start");
-				lv3dir = glGetUniformLocation( shaderprogram,"dir");
-				lfdist = glGetUniformLocation( shaderprogram,"dist");
-				lfmypow = glGetUniformLocation( shaderprogram, "mypow");
+		glowingline = (p3d*)malloc(sizeof(p3d)*4);
+		
+		
+		glowingline[0] = createp3d(30, -2, -0);
+		glowingline[1] = createp3d(30, 2, -0);
+		glowingline[2] = createp3d(-30, 2, -0);
+		glowingline[3] = createp3d(-30, -2, -0);
+		shaderV = makeVertexShader("vert.vert",NULL);
+		shaderF = makeFragmentShader("frag.frag",NULL);
+		
+		shaderprogram = glCreateProgram();
+		glAttachShader(shaderprogram,shaderV);
+		glAttachShader(shaderprogram,shaderF);
+		glLinkProgram(shaderprogram);
+		
+		lv3start = glGetUniformLocation( shaderprogram,"start");
+		lv3dir = glGetUniformLocation( shaderprogram,"dir");
+		lfdist = glGetUniformLocation( shaderprogram,"dist");
+		lfmypow = glGetUniformLocation( shaderprogram, "mypow");
 		}
 #endif
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -626,7 +620,7 @@ void initialize ()
 		
 		
 		///plane.....
-		
+
 		shaderVChecker = makeVertexShader("checker.vert",NULL);
 		shaderFChecker = makeFragmentShader("checker.frag",NULL);
 		shaderCheckProgram = makeProgram(shaderVChecker, shaderFChecker);
@@ -684,60 +678,63 @@ void terminate()
 		
 		delete meshPlane;
 		delete meshSphere;
-		
-		
-#ifdef renderBezier
-		{
-				releasep2darr(points, pointnum);
-				for(i=0;i<exlinesnum;i++)
-				releasep2darr(exlines[i], pointnum);
-				free(exlines);
-				
-				releasep2darr(moonpoints, moonpnum);
-				for(i=0;i<exmoonlinesnum;i++)
-				releasep2darr(moonexlines[i], moonpnum);
-				free(moonexlines);
-				
-				releasep2darr(sunpoints, sunpnum);
-		}
-#endif
-
 }
 
+void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
+{
+		switch ( key )
+		{
+				case KEY_ESCAPE:
+				terminate();
+				exit ( 0 );
+				
+				break;
+				
+				default:
+				break;
+		}
+}
 
 int main(int argc, char **argv)
 {
+		int i;
+		// set window values
+		win.width = 2048;
+		win.height = 512;
+		win.title = "OpenGL";
+		win.field_of_view_angle = 45;
+		win.z_near = 1.0f;
+		win.z_far = 500.0f;
+		
+		// initialize and run program
+		glutInit(&argc, argv);                                      // GLUT initialization
+		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );  // Display Mode
+		//glutInitContextProfile(GLUT_CORE_PROFILE | GLUT_COMPATIBILITY_PROFILE);
 
-		GLFWwindow *window;
-		if(!glfwInit())
-		{
-				return -1;
-		}
-		
-		window = glfwCreateWindow(winwidth,winheight,"joningunGLSL",NULL,NULL);
-		if(!window)
-		{
-				glfwTerminate();
-				return -1;
-		}
-		
-		glfwMakeContextCurrent(window);
-		
+		glutInitWindowSize(win.width,win.height);					// set window size
+		glutCreateWindow(win.title);								// create Window
+		glutDisplayFunc(display);									// register Display Function
+		glutIdleFunc( display );									// register Idle Function
+		glutKeyboardFunc( keyboard );								// register Keyboard Handler
 		initialize();
-		while(!glfwWindowShouldClose(window))
-		{
-				update();
-				display();
-				drawfinish();
-				
-				glfwSwapBuffers(window);
-				glfwPollEvents();
-		}
-		terminate();
-		glfwTerminate();
+		glutMainLoop();												// run GLUT mainloop
+#ifdef renderBezier
+{
+		releasep2darr(points, pointnum);
+		for(i=0;i<exlinesnum;i++)
+				releasep2darr(exlines[i], pointnum);
+		free(exlines);
 		
+		releasep2darr(moonpoints, moonpnum);
+		for(i=0;i<exmoonlinesnum;i++)
+				releasep2darr(moonexlines[i], moonpnum);
+		free(moonexlines);
 		
+		releasep2darr(sunpoints, sunpnum);
+}
+#endif
 		
+
 		
 		return 0;
 }

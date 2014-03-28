@@ -24,12 +24,13 @@ GLuint makeVertexShader(char* path, GLint *perror);
 GLuint makeFragmentShader(char* path, GLint *perror);
 GLint makeVertexArrayIndexBuffer( GLuint* buffer,unsigned short* data, unsigned int arraylen);
 
-GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLuint program, GLuint* buffer, void* data, int structSize, unsigned int arraylen);
+GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLuint* buffer, void* data, int structSize, unsigned int arraylen);
 
 GLint makeVAOBufferOnly( GLuint* buffer, void* data, int structSize, unsigned int arraylen);
 VAOparameter* getFixedVAOParameters();
 unsigned int getNumFixedVAOParameters();
 GLuint makeProgram(GLuint attachingVertexShader, GLuint attachingFragmentShader);
+GLuint makeTexture(char* path, unsigned int *pwidth, unsigned int *pheight);
 #ifdef __cplusplus
 }
 #endif
