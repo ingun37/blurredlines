@@ -37,14 +37,14 @@ int myMesh::render()
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, materialproperties->ambient);
 		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, materialproperties->shininess);
 		
-		if(program)
+
+		//텍스쳐들 입혀준다.
+		for(itor = texunitpairs.begin(); itor !=texunitpairs.end(); itor++)
 		{
-				for(itor = texunitpairs.begin(); itor !=texunitpairs.end(); itor++)
-				{
-						glActiveTexture((*itor)->unit);
-						glBindTexture(GL_TEXTURE_2D, (*itor)->texid );
-				}
+				glActiveTexture((*itor)->unit);
+				glBindTexture(GL_TEXTURE_2D, (*itor)->texid );
 		}
+
 		glBindVertexArrayAPPLE(vao);
 		glDrawElements(GL_TRIANGLES, numIndices * sizeof(short), GL_UNSIGNED_SHORT, NULL);
 		glBindVertexArrayAPPLE(0);
@@ -133,11 +133,10 @@ void myMesh::release()
 		
 		std::list<texidUnitPair*>::iterator itor;
 		
-		if(program)
+		
+		for(itor = texunitpairs.begin(); itor !=texunitpairs.end(); itor++)
 		{
-				for(itor = texunitpairs.begin(); itor !=texunitpairs.end(); itor++)
-				{
-						free(*itor);
-				}
+				free(*itor);
 		}
+
 }

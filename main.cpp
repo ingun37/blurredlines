@@ -9,6 +9,7 @@
 #include <time.h>
 #include <string.h>
 
+#include "myprogrammer.h"
 #include "vertex.h"
 #include "myshader.h"
 #include "myshapes.h"
@@ -62,12 +63,16 @@ static GLuint shaderF;
 static GLint lv3start, lv3dir, lfdist, lv3mycolor, lfmypow;
 
 //shaders
-static GLuint shaderLightprogram, shaderVLight, shaderFLight;
+
+static myprogrammer programs;
+
+static GLuint shaderLightprogram;//, shaderVLight, shaderFLight;
 static GLint lfUNIv3lightdir, lfUNIv3eyepos, lfUNIv3specc, lfUNIv3spherecenter;
 
-static GLuint shaderFChecker, shaderVChecker, shaderCheckProgram;
+static GLuint shaderCheckProgram;//shaderFChecker, shaderVChecker, ;
 
-static GLuint shaderFTexUnlit, shaderVTexUnlit, shaderTexUnlitProgram;
+static GLuint shaderTexUnlitProgram;// shaderFTexUnlit, shaderVTexUnlit, ;
+
 static GLint lfUNIitex;
 //meshes
 static myMesh* meshSphere;
@@ -609,9 +614,10 @@ void initialize ()
 		
 		
 		//spheres.....
-		shaderVLight = makeVertexShader("light.vert",NULL);
-		shaderFLight = makeFragmentShader("light.frag",NULL);
-		shaderLightprogram = makeProgram(shaderVLight, shaderFLight);
+		//shaderVLight = makeVertexShader("light.vert",NULL);
+		//shaderFLight = makeFragmentShader("light.frag",NULL);
+		//shaderLightprogram = makeProgram(shaderVLight, shaderFLight);
+		shaderLightprogram = programs.makeAndManageProgram("light.vert","light.frag");
 		
 		lfUNIv3eyepos = glGetUniformLocation (shaderLightprogram, "eyepos");
 		
@@ -627,14 +633,9 @@ void initialize ()
 		
 		///plane.....
 		
-		shaderVChecker = makeVertexShader("checker.vert",NULL);
-		shaderFChecker = makeFragmentShader("checker.frag",NULL);
-		shaderCheckProgram = makeProgram(shaderVChecker, shaderFChecker);
+		shaderCheckProgram = programs.makeAndManageProgram("checker.vert","checker.frag");
 		
-		
-		shaderVTexUnlit = makeVertexShader("texunlit.vert",NULL);
-		shaderFTexUnlit = makeFragmentShader("texunlit.frag",NULL);
-		shaderTexUnlitProgram = makeProgram(shaderVTexUnlit, shaderFTexUnlit);
+		shaderTexUnlitProgram = programs.makeAndManageProgram("texunlit.vert","texunlit.frag");
 		
 		lfUNIitex = glGetUniformLocation(shaderTexUnlitProgram, "tex");
 		
@@ -666,6 +667,7 @@ void terminate()
 		free(planeindices);
 		free(sphereindices);
 		
+		/*
 		glDetachShader(shaderCheckProgram, shaderVChecker);
 		glDetachShader(shaderCheckProgram, shaderFChecker);
 		
@@ -681,7 +683,7 @@ void terminate()
 		glDeleteShader(shaderFLight);
 		
 		glDeleteProgram(shaderLightprogram);
-		
+		*/
 		delete meshPlane;
 		delete meshSphere;
 		

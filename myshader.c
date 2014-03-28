@@ -104,32 +104,9 @@ GLuint makeProgram(GLuint attachingVertexShader, GLuint attachingFragmentShader)
 		
 		return prog;
 }
-
-GLint makeVertexArrayBufferToAttribute(char* varname, GLint *location, GLuint program, GLuint* buffer, void* data, unsigned int size, unsigned int buffertype, unsigned int elementnum, unsigned int vartype)
+GLuint makeProgramFast(char* vp, char* fp)
 {
-		if(location == NULL) return 1;
-		if(buffer == NULL) return 1;
-		//attribute변수 위치 받아오고...
-		*location = glGetAttribLocation( program, varname);
-
-		//버퍼 한개 만들어서 아이디 buffer에 집어넣고..
-		glGenBuffers(1,buffer);
-		printOpenGLError();
-		//그 버퍼는 GL_ARRAY_BUFFER형식이라고 말하고..
-		glBindBuffer(buffertype, *buffer);
-		printOpenGLError();
-		//버퍼에 데이타쌓고
-		glBufferData(buffertype, size, data, GL_STATIC_DRAW);
-		printOpenGLError();
-		//키고..
-		glEnableVertexAttribArray(*location);
-		printOpenGLError();
-		//변수형 알려주고..
-		glVertexAttribPointer(*location, elementnum, vartype, 0, 0, 0);
-		printOpenGLError();
-		
-		
-		return 0;
+		return makeProgram(makeVertexShader(vp,NULL), makeFragmentShader(fp,NULL));
 }
 /*
  char varname[128];
@@ -210,16 +187,11 @@ GLint makeVAOBufferOnly( GLuint* buffer, void* data, int structSize, unsigned in
 
 GLint makeVertexArrayIndexBuffer( GLuint* buffer,unsigned short* data, unsigned int arraylen)
 {
-		//return makeVertexArrayBufferToAttribute(varname, location, program, buffer, data, arraylen * sizeof(int), GL_ELEMENT_ARRAY_BUFFER, 1, GL_FLOAT);
 		if(buffer == NULL) return 1;
 
-		//attribute변수 위치 받아오고...
-		//*location = glGetAttribLocation(program,varname);
-		//printf("%d %s %d\n", program, varname, *location);
 		//버퍼 한개 만들어서 아이디 buffer에 집어넣고..
 		glGenBuffers(1,buffer);
 		printOpenGLError();
-		//그 버퍼는 GL_ARRAY_BUFFER형식이라고 말하고..
 		printf("binding index buffer : %d\n", *buffer);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *buffer);
 		printOpenGLError();

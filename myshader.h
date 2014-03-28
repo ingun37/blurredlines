@@ -30,6 +30,7 @@ GLint makeVAOBufferOnly( GLuint* buffer, void* data, int structSize, unsigned in
 VAOparameter* getFixedVAOParameters();
 unsigned int getNumFixedVAOParameters();
 GLuint makeProgram(GLuint attachingVertexShader, GLuint attachingFragmentShader);
+		GLuint makeProgramFast(char* vp, char* fp);
 GLuint makeTexture(char* path, unsigned int *pwidth, unsigned int *pheight);
 #ifdef __cplusplus
 }
