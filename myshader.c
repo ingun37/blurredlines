@@ -173,16 +173,16 @@ GLint makeVAOBufferToAttribute( VAOparameter* parameters, int parameternum, GLui
 
 				glVertexAttribPointer(parameters[i].location, parameters[i].elementnum, parameters[i].type,parameters[i].willNormalize, structSize, parameters[i].offset);
 		}
+		return 0;
 }
 
 GLint makeVAOBufferOnly( GLuint* buffer, void* data, int structSize, unsigned int arraylen)
 {
-		int i;
-		int location;
-		
+
 		glGenBuffers(1, buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, *buffer);
 		glBufferData(GL_ARRAY_BUFFER, arraylen * structSize, data, GL_STATIC_DRAW);
+		return 0;
 }
 
 GLint makeVertexArrayIndexBuffer( GLuint* buffer,unsigned short* data, unsigned int arraylen)
@@ -204,6 +204,7 @@ GLint makeVertexArrayIndexBuffer( GLuint* buffer,unsigned short* data, unsigned 
 		//변수형 알려주고..
 		//glVertexAttribPointer(*location, 1, GL_UNSIGNED_SHORT, 0, 0, 0);
 		//printOpenGLError();
+		return 0;
 }
 
 GLuint makeTexture(char* path, unsigned int *pwidth, unsigned int *pheight)

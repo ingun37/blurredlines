@@ -13,11 +13,11 @@ myMesh::myMesh()
 		vao = 0;
 		materialproperties = (MaterialProperties*)malloc(sizeof(MaterialProperties));
 		memset(materialproperties, 0, sizeof(MaterialProperties));
-		program = 0;
+
 		vshader = 0;
 		fshader = 0;
-		ibo = NULL;
-		vbo = NULL;
+		ibo = 0;
+		vbo = 0;
 		numVertices = 0;
 		numIndices = 0;
 
@@ -48,11 +48,13 @@ int myMesh::render()
 		glBindVertexArrayAPPLE(vao);
 		glDrawElements(GL_TRIANGLES, numIndices * sizeof(short), GL_UNSIGNED_SHORT, NULL);
 		glBindVertexArrayAPPLE(0);
+		return 0;
 }
 
 int myMesh::setMaterial( MaterialProperties mat)
 {
 		memcpy(materialproperties, &mat, sizeof(MaterialProperties));
+		return 0;
 }
 void myMesh::setTexid(unsigned int texid, unsigned int texUnitnum)
 {
@@ -80,11 +82,6 @@ unsigned int myMesh::getVAO()
 		return vao;
 }
 
-void myMesh::setItsShaderProgram(unsigned int progid)
-{
-		program = progid;
-}
-
 int myMesh::setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum)
 {
 		if(pv == NULL || inum == 0 || vnum == 0)
@@ -96,8 +93,9 @@ int myMesh::setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum)
 		glGenVertexArraysAPPLE(1, &vao);
 		glBindVertexArrayAPPLE(vao);
 		
-		if(program)
+		if(1)
 		{
+				vertices = pv;
 				makeVAOBufferToAttribute(getFixedVAOParameters(), getNumFixedVAOParameters(), &vbo, pv, sizeof(Vertex), vnum);
 		}
 		
@@ -106,7 +104,10 @@ int myMesh::setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum)
 		
 		
 		if(pi)
+		{
+				indices = pi;
 				makeVertexArrayIndexBuffer( &ibo, pi, inum);
+		}
 		
 		glBindVertexArrayAPPLE(0);
 		

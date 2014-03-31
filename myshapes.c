@@ -5,7 +5,7 @@
 int makePlane(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, float*** vertices, unsigned short** indices, int isClockwise)
 {
 		float** tmpv;
-		short* tmpi;
+		unsigned short* tmpi;
 		int i, j;
 		int widthvnum = widthSeg + 1;
 		int heightvnum = heightSeg + 1;
@@ -151,7 +151,7 @@ int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, un
 {
 		int i;
 		unsigned int pnum = spherePointnum(smoothness);
-		unsigned int slicenum = sphereVertNumPerSlice(smoothness);
+
 		unsigned int facenum = sphereFaceNum(smoothness);
 		
 		p3d* spherepoints = createp3dArr(pnum);
@@ -187,6 +187,8 @@ int makeSphereObject(unsigned int smoothness,float radius, Vertex** vertices, un
 		if(pinum)
 				*pinum = facenum*3;
 		releasep3darr(spherepoints, pnum);
+		
+		return 0;
 }
 
 int makeSphereForTextureObject(unsigned int smoothness,float radius, Vertex** vertices, unsigned short** indices)
@@ -197,7 +199,7 @@ int makeSphereForTextureObject(unsigned int smoothness,float radius, Vertex** ve
 		
 		unsigned short *tmpi;
 		Vertex* tmpv;
-		int i, j, *idx;
+		int i, j;
 		float tmpangle, tmpradius, tmpheight;
 		
 		tmpangle = PI/(smoothness+1);

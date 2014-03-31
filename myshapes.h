@@ -1,6 +1,7 @@
-#ifndef glutsample_myshapes_h
-#define glutsample_myshapes_h
+#ifndef myshapes_h
+#define myshapes_h
 
+#include "Vertex.h"
 #define PI 3.141592
 #define spherePointnum(S) (2 + S*((2*S) + 2))
 #define sphereVertNumPerSlice(S) (S*2+2)
@@ -14,10 +15,12 @@
 
 #define planePointnum(W,H) ((W+1)*(H+1))
 #define planeIndicesNum(W,H) (W*H*6)
+
+
 #ifdef __cplusplus
 extern "C"{
 #endif
-typedef struct Vertexraw Vertex;
+
 int makeSphereVerticesAndIndices(unsigned int smoothness,float radius, float **vertices, unsigned short *indices, float*** normals);
 		
 int makePlaneObject(float widthLen, float heightLen, unsigned int widthSeg, unsigned int heightSeg, Vertex** vertices, unsigned short** indices, int isClockwise, unsigned int* pvnum, unsigned int* pinum);

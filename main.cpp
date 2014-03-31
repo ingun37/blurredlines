@@ -15,6 +15,9 @@
 #include "myshapes.h"
 #include "mymesh.h"
 #include "materialProperties.h"
+
+#include "myfbx.h"
+
 #define KEY_ESCAPE 27
 //#define PI 3.141592
 #define D360 (PI*2)
@@ -612,14 +615,12 @@ void initialize ()
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
 		
+		char lightvshadername[] = "light.vert";
+		char lightfshadername[] = "light.frag";
+		shaderLightprogram = programs.makeAndManageProgram(lightvshadername,lightfshadername);
 		
-		//spheres.....
-		//shaderVLight = makeVertexShader("light.vert",NULL);
-		//shaderFLight = makeFragmentShader("light.frag",NULL);
-		//shaderLightprogram = makeProgram(shaderVLight, shaderFLight);
-		shaderLightprogram = programs.makeAndManageProgram("light.vert","light.frag");
-		
-		lfUNIv3eyepos = glGetUniformLocation (shaderLightprogram, "eyepos");
+		char lightProgramuniformeyeposname[] = "eyepos";
+		lfUNIv3eyepos = glGetUniformLocation (shaderLightprogram, lightProgramuniformeyeposname);
 		
 		//reduced vertex sphere.....
 		unsigned int pnum;
@@ -627,16 +628,19 @@ void initialize ()
 		
 		makeSphereObject(sphereSmoothness, sphereradius, &spherevertices, &sphereindices ,&pnum,&inum);
 		meshSphere = new myMesh();
-		meshSphere->setItsShaderProgram(shaderLightprogram);
 		meshSphere->setVAO(spherevertices, pnum, sphereindices, inum);
 		meshSphere->setMaterial( spheremat );
 		
 		
 		///plane.....
 		
-		shaderCheckProgram = programs.makeAndManageProgram("checker.vert","checker.frag");
+		char checkervshadername[] = "checker.vert";
+		char checkerfshadername[] = "checker.frag";
+		shaderCheckProgram = programs.makeAndManageProgram(checkervshadername,checkerfshadername);
 		
-		shaderTexUnlitProgram = programs.makeAndManageProgram("texunlit.vert","texunlit.frag");
+		char texunlitvshadername[] = "texunlit.vert";
+		char texunlitfshadername[] = "texunlit.frag";
+		shaderTexUnlitProgram = programs.makeAndManageProgram(texunlitvshadername,texunlitfshadername);
 		
 		lfUNIitex = glGetUniformLocation(shaderTexUnlitProgram, "tex");
 		
@@ -645,14 +649,18 @@ void initialize ()
 		
 		makePlaneObject(planeWidthlen, planeHeightlen, planeWidthSeg, planeHeightSeg, &planevertices, &planeindices, 0, &pnum, &inum);
 		
+		char planetexturefilename[] = "plane.png";
 		meshPlane = new myMesh();
 		//meshPlane->setItsShaderProgram(shaderCheckProgram);
-		meshPlane->setItsShaderProgram(shaderTexUnlitProgram);
+
 		meshPlane->setVAO(planevertices, pnum, planeindices, inum);
 		meshPlane->setMaterial( planemat );
-		meshPlane->setTexidByPath("plane.png", GL_TEXTURE0);
+		meshPlane->setTexidByPath(planetexturefilename, GL_TEXTURE0);
 		
 		printOpenGLError();
+		
+		char bottomfbxfilename[] = "box.FBX";
+		getVerticesFromFBXpath(bottomfbxfilename);
 		puts("init end");
 		
 		glEnable(GL_CULL_FACE);

@@ -19,7 +19,7 @@ class myMesh
 		unsigned int vao;
 		unsigned int vbo;
 		unsigned int ibo;
-		unsigned int program;
+
 		unsigned int vshader;
 		unsigned int fshader;
 		
@@ -34,7 +34,7 @@ public:
 		unsigned int getVnum();
 		unsigned int getInum();
 		unsigned int getVAO();
-		void setItsShaderProgram(unsigned int progid);
+
 		int setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum);
 		//int setShader(char* vshadername, char* fshadername);
 		
