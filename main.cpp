@@ -17,7 +17,7 @@
 #include "materialProperties.h"
 
 #include "myfbx.h"
-
+#include "mynode.h"
 #define KEY_ESCAPE 27
 //#define PI 3.141592
 #define D360 (PI*2)
@@ -84,6 +84,15 @@ static myMesh* meshPlane;
 
 //locations
 
+//fbxthings...
+static mynode* box;
+static MaterialProperties boxmat =
+{
+		{0.6f,0.2f,0.9f,1},
+		{0.6f,0.2f,0.9f,1},
+		{1.f,1.f,1.f,1},
+		20.f,
+};
 
 //sphere things...
 static unsigned short* sphereindices;
@@ -394,6 +403,14 @@ void display()
 		 }
 		 glPopMatrix();
 		 */
+		//render box....
+		glUseProgram( shaderCheckProgram);
+		glPushMatrix();
+		glTranslatef(0,1,0);
+		box->render();
+		glPopMatrix();
+		
+		
 		//render plane....
 		glUseProgram(shaderTexUnlitProgram);
 		
@@ -660,11 +677,13 @@ void initialize ()
 		printOpenGLError();
 		
 		char bottomfbxfilename[] = "box.FBX";
-		getVerticesFromFBXpath(bottomfbxfilename);
+		
+		box = getNodeFromFBXpath(bottomfbxfilename);
+		
 		puts("init end");
 		
-		glEnable(GL_CULL_FACE);
-		//glDisable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
+		glDisable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 		clockstart = clock();
 }

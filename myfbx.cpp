@@ -2,7 +2,125 @@
 #include "myfbx.h"
 #include "Vertex.h"
 #define safedestroy(p) {if(p){p->Destroy();} p=NULL;}
-Vertex* getVerticesFromFBXpath(char* path)
+mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
+{
+		int i;
+		mynode* retnode=NULL;
+		FbxNode* tmpfbxnode=NULL;
+		mynode* tmpmynode=NULL;
+		myMesh* mmesh=NULL;
+		FbxMesh* fmesh=NULL;
+		
+		int indicesnum;
+		int* polygonvertices=NULL;
+		unsigned short* indices=NULL;
+		
+		int controlpointsnum;
+		FbxVector4* controlpoints=NULL;
+		Vertex* vertices=NULL;
+		
+		FbxLayerElementNormal* normallayer=NULL;
+		FbxLayerElementUV* uvlayer = NULL;
+		
+		if(fbxnode->GetNodeAttribute()->GetAttributeType() != FbxNodeAttribute::eMesh)
+		{
+				puts("not mesh...");
+				return NULL;
+		}
+		
+		retnode=new mynode();
+		
+		//자식 노드 재귀함수로 집어넣기..
+		for(i=0;i < fbxnode->GetChildCount();i++)
+		{
+				tmpfbxnode = fbxnode->GetChild(i);
+				if(tmpfbxnode)
+				{
+						tmpmynode = getMyNodeFromFBXNode(tmpfbxnode);
+						if(tmpmynode)
+								retnode->addNode( tmpmynode );
+				}
+		}
+		
+		//메쉬받아온다.
+		fmesh = fbxnode->GetMesh();
+		
+		//인덱스...
+		indicesnum = fmesh->GetPolygonVertexCount();
+		polygonvertices = fmesh->GetPolygonVertices();
+/*		indices = new unsigned short[indicesnum]; 일단 보류 노말벡터때문에
+		for(i=0;i<indicesnum;i++)
+		{
+				indices[i] = polygonvertices[i];
+		}*/
+		
+		//버텍스...
+		controlpointsnum = fmesh->GetControlPointsCount();
+		controlpoints = fmesh->GetControlPoints();
+		vertices = new Vertex[indicesnum];
+		
+		//노말이랑 uv레이어 받아옴...
+		if(fmesh->GetLayer(0,FbxLayerElement::eNormal))
+		{
+				puts("eNORMAL layer exists...");
+				normallayer = fmesh->GetLayer(0,FbxLayerElement::eNormal)->GetNormals();
+				if(normallayer)
+				{
+						printf("GetNormal exists\nlen : %d IndexLen : %d\n",normallayer->GetDirectArray().GetCount(), normallayer->GetIndexArray().GetCount());
+				}
+		}
+		if(fmesh->GetLayer(0,FbxLayerElement::eUV))
+		{
+				puts("eUV layer exists...");
+				uvlayer = fmesh->GetLayer(0,FbxLayerElement::eUV)->GetUVs();
+				if(uvlayer)
+				{
+						printf("GetUVs exists\nlen : %d IndexLen : %d\n",uvlayer->GetDirectArray().GetCount(), uvlayer->GetIndexArray().GetCount());
+				}
+		}
+		puts("uv indices and polygon indices");
+		
+		for (i=0; i<indicesnum; i++)
+		{
+				printf("%d ",uvlayer->GetIndexArray()[i]);
+		}
+		
+		putchar('\n');
+		for (i=0; i<indicesnum; i++)
+		{
+				printf("%d ",polygonvertices[i]);
+		}
+		
+		putchar('\n');
+		
+		for(i=0;i<indicesnum;i++)
+		{
+				vertices[i].position[0]=controlpoints[polygonvertices[i]][0];
+				vertices[i].position[1]=controlpoints[polygonvertices[i]][1];
+				vertices[i].position[2]=controlpoints[polygonvertices[i]][2];
+				
+				if(normallayer)//확인해보니 normal의 갯수가 index갯수랑 똑같고 normallayer의 indexarray는 없더라
+				{
+				vertices[i].normal[0]=normallayer->GetDirectArray()[i][0];
+				vertices[i].normal[1]=normallayer->GetDirectArray()[i][1];
+				vertices[i].normal[2]=normallayer->GetDirectArray()[i][2];
+				}
+				if(uvlayer)
+				{
+				vertices[i].uv[0]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][0];
+				vertices[i].uv[1]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][1];
+				}
+				printf("%d.\n   position %.2f %.2f %.2f\n   normal %.2f %.2f %.2f\n   uv %.2f %.2f\n",i,vertices[i].position[0],vertices[i].position[1],vertices[i].position[2],vertices[i].normal[0],vertices[i].normal[1],vertices[i].normal[2],vertices[i].uv[0],vertices[i].uv[1]);
+		}
+		
+		mmesh = new myMesh();
+		mmesh->setVAO(vertices, indicesnum, NULL,0);
+		
+		retnode->setMesh(mmesh);
+		return retnode;
+}
+
+mynode* getNodeFromFBXpath(char* path)
 {
 	int i;
 	FbxManager* sdkmanager = NULL;
@@ -11,25 +129,18 @@ Vertex* getVerticesFromFBXpath(char* path)
 	FbxImporter* importer = NULL;
 	bool status;
 	FbxNode* rootnode = NULL;
-	FbxNode* tmpnode = NULL;
-	FbxMesh* mesh = NULL;
-		FbxVector4* controlpoints;
-		int *polygonvertices;
+	FbxNode* tmpfbxnode;
+	mynode* myrootnode,*tmpmynode;
+
+
+
 	try
 	{
 		sdkmanager = FbxManager::Create();
 		scene = FbxScene::Create(sdkmanager, "");
 
 		ios = FbxIOSettings::Create(sdkmanager, IOSROOT);
-		/*
-		ios->SetBoolProp(IMP_FBX_MATERIAL, false);
-		ios->SetBoolProp(IMP_FBX_TEXTURE, false);
-		ios->SetBoolProp(IMP_FBX_LINK, false);
-		ios->SetBoolProp(IMP_FBX_SHAPE, false);
-		ios->SetBoolProp(IMP_FBX_GOBO, false);
-		ios->SetBoolProp(IMP_FBX_ANIMATION, false);
-		ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
-		*/
+		
 		sdkmanager->SetIOSettings(ios);
 		
 		importer = FbxImporter::Create(sdkmanager, "");
@@ -52,37 +163,25 @@ Vertex* getVerticesFromFBXpath(char* path)
 		
 		printf("root node's child num : %d\n",rootnode->GetChildCount());
 		
-		for(i=0;i<rootnode->GetChildCount();i++)
+		myrootnode = new mynode();
+			
+		for(i=0;i < rootnode->GetChildCount();i++)
 		{
-				tmpnode = rootnode->GetChild(i);
+			tmpfbxnode = rootnode->GetChild(i);
+			if(tmpfbxnode)
+			{
+				tmpmynode = getMyNodeFromFBXNode(tmpfbxnode);
+				if(tmpmynode)
+					myrootnode->addNode( tmpmynode );
+			}
 		}
 		
-		if(tmpnode == NULL)
-				throw("no child of root node");
-			
-			mesh = tmpnode->GetMesh();
-			polygonvertices = mesh->GetPolygonVertices();
-			controlpoints = mesh->GetControlPoints();
-			
-			printf("control points len : %d\n",mesh->GetControlPointsCount());
-			printf("polygon count : %d\n",mesh->GetPolygonCount());
-			printf("polygonvertexcount : %d\n",mesh->GetPolygonVertexCount());
-			for(i=0;i<mesh->GetPolygonVertexCount();i++)
-			{
-					printf("%d : %f  %f  %f\n"
-						   ,polygonvertices[i]
-						   ,controlpoints[polygonvertices[i]][0]
-						   ,controlpoints[polygonvertices[i]][1]
-						   ,controlpoints[polygonvertices[i]][2]
-						   );
-			}
-			
+		return myrootnode;
 	}
 	catch(char* err)
 	{
 		puts(err);
 		
-		safedestroy( tmpnode );
 		safedestroy( rootnode );
 		safedestroy( importer );
 		safedestroy( ios );

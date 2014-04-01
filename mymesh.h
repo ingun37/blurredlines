@@ -32,7 +32,7 @@ class myMesh
 public:
 
 		unsigned int getVnum();
-		unsigned int getInum();
+		unsigned int getInum(	);
 		unsigned int getVAO();
 
 		int setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum);

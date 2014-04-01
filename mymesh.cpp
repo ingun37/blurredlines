@@ -46,7 +46,15 @@ int myMesh::render()
 		}
 
 		glBindVertexArrayAPPLE(vao);
-		glDrawElements(GL_TRIANGLES, numIndices * sizeof(short), GL_UNSIGNED_SHORT, NULL);
+		if(ibo > 0)
+		{
+				glDrawElements(GL_TRIANGLES, numIndices * sizeof(short), GL_UNSIGNED_SHORT, NULL);
+		}
+		else
+		{
+
+				glDrawArrays(GL_TRIANGLES,0,numVertices);
+		}
 		glBindVertexArrayAPPLE(0);
 		return 0;
 }
@@ -84,31 +92,36 @@ unsigned int myMesh::getVAO()
 
 int myMesh::setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum)
 {
-		if(pv == NULL || inum == 0 || vnum == 0)
+		if(pv == NULL || vnum == 0)
 				return -1;
-		
-		numVertices = vnum;
-		numIndices = inum;
 		
 		glGenVertexArraysAPPLE(1, &vao);
 		glBindVertexArrayAPPLE(vao);
 		
 		if(1)
 		{
+				numVertices = vnum;
 				vertices = pv;
 				makeVAOBufferToAttribute(getFixedVAOParameters(), getNumFixedVAOParameters(), &vbo, pv, sizeof(Vertex), vnum);
 		}
-		
 		else
+		{
+				numVertices = vnum;
+				vertices = pv;
 				makeVAOBufferOnly(&vbo, pv, sizeof(Vertex), vnum);
+		}
 		
 		
 		if(pi)
 		{
+				numIndices = inum;
 				indices = pi;
 				makeVertexArrayIndexBuffer( &ibo, pi, inum);
 		}
-		
+		else
+		{
+				puts("pi is null not making index buffer...");
+		}
 		glBindVertexArrayAPPLE(0);
 		
 		return 0;
@@ -116,6 +129,7 @@ int myMesh::setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum)
 
 void myMesh::release()
 {
+
 		if(vbo)
 		{
 				glDeleteBuffers(1,&vbo);
