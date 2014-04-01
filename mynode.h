@@ -1,15 +1,20 @@
 #ifndef mynode_h
 #define mynode_h
 #include <vector>
-#include "mymesh.h"
+
+class myMesh;
 class mynode
 {
 		std::vector<mynode*> childnodes;
-		myMesh* mesh;
+		
+		float localpos[3];
 public:
+		myMesh* mesh;
 		int render();
 		int setMesh(myMesh* mesh);
 		int addNode(mynode* child);
+		int setLocalPos(float x, float y, float z);
+		mynode* getChildAt(int n);
 		mynode();
 		~mynode();
 };

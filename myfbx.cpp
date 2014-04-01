@@ -1,7 +1,10 @@
 #include <fbxsdk.h>
 #include "myfbx.h"
 #include "Vertex.h"
+#include "mymesh.h"
 #define safedestroy(p) {if(p){p->Destroy();} p=NULL;}
+
+//#define useibo
 mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 {
 		int i;
@@ -17,6 +20,7 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		
 		int controlpointsnum;
 		FbxVector4* controlpoints=NULL;
+		FbxVector4 localpos;
 		Vertex* vertices=NULL;
 		
 		FbxLayerElementNormal* normallayer=NULL;
@@ -28,7 +32,13 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 				return NULL;
 		}
 		
+		puts("\nmaking new mesh node....");
 		retnode=new mynode();
+		mmesh = new myMesh();
+		
+		localpos = fbxnode->LclTranslation.Get();
+		printf("local pos is..... %f %f %f\n", localpos[0], localpos[1], localpos[2]);
+		retnode->setLocalPos(localpos[0], localpos[1], localpos[2]);
 		
 		//자식 노드 재귀함수로 집어넣기..
 		for(i=0;i < fbxnode->GetChildCount();i++)
@@ -45,19 +55,6 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		//메쉬받아온다.
 		fmesh = fbxnode->GetMesh();
 		
-		//인덱스...
-		indicesnum = fmesh->GetPolygonVertexCount();
-		polygonvertices = fmesh->GetPolygonVertices();
-/*		indices = new unsigned short[indicesnum]; 일단 보류 노말벡터때문에
-		for(i=0;i<indicesnum;i++)
-		{
-				indices[i] = polygonvertices[i];
-		}*/
-		
-		//버텍스...
-		controlpointsnum = fmesh->GetControlPointsCount();
-		controlpoints = fmesh->GetControlPoints();
-		vertices = new Vertex[indicesnum];
 		
 		//노말이랑 uv레이어 받아옴...
 		if(fmesh->GetLayer(0,FbxLayerElement::eNormal))
@@ -69,6 +66,7 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 						printf("GetNormal exists\nlen : %d IndexLen : %d\n",normallayer->GetDirectArray().GetCount(), normallayer->GetIndexArray().GetCount());
 				}
 		}
+		
 		if(fmesh->GetLayer(0,FbxLayerElement::eUV))
 		{
 				puts("eUV layer exists...");
@@ -78,44 +76,86 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 						printf("GetUVs exists\nlen : %d IndexLen : %d\n",uvlayer->GetDirectArray().GetCount(), uvlayer->GetIndexArray().GetCount());
 				}
 		}
-		puts("uv indices and polygon indices");
 		
-		for (i=0; i<indicesnum; i++)
+		
+		//인덱스...
+		indicesnum = fmesh->GetPolygonVertexCount();
+		polygonvertices = fmesh->GetPolygonVertices();
+		
+		//버텍스...
+		controlpointsnum = fmesh->GetControlPointsCount();
+		controlpoints = fmesh->GetControlPoints();
+		
+		/*
+		 puts("uv indices and polygon indices");
+		 for (i=0; i<indicesnum; i++)
+		 {
+		 printf("%d ",uvlayer->GetIndexArray()[i]);
+		 }
+		 
+		 putchar('\n');
+		 for (i=0; i<indicesnum; i++)
+		 {
+		 printf("%d ",polygonvertices[i]);
+		 }
+		 
+		 putchar('\n');
+		 */
+		
+#ifdef useibo
+		indices = new unsigned short[indicesnum];
+		
+		for(i=0;i<indicesnum;i++)
 		{
-				printf("%d ",uvlayer->GetIndexArray()[i]);
+				indices[i] = polygonvertices[i];
 		}
 		
-		putchar('\n');
-		for (i=0; i<indicesnum; i++)
+		vertices = new Vertex[controlpointsnum];
+		for(i=0;i<controlpointsnum;i++)
 		{
-				printf("%d ",polygonvertices[i]);
+				vertices[i].position[0]=controlpoints[i][0];
+				vertices[i].position[1]=controlpoints[i][1];
+				vertices[i].position[2]=controlpoints[i][2];
+				
+				if(normallayer)//확인해보니 normal의 갯수가 index갯수랑 똑같고 normallayer의 indexarray는 없더라
+				{
+						vertices[i].normal[0]=normallayer->GetDirectArray()[i][0];
+						vertices[i].normal[1]=normallayer->GetDirectArray()[i][1];
+						vertices[i].normal[2]=normallayer->GetDirectArray()[i][2];
+				}
+				if(uvlayer)
+				{
+						vertices[i].uv[0]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][0];
+						vertices[i].uv[1]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][1];
+				}
+				//printf("%d.\n   position %.2f %.2f %.2f\n   normal %.2f %.2f %.2f\n   uv %.2f %.2f\n",i,vertices[i].position[0],vertices[i].position[1],vertices[i].position[2],vertices[i].normal[0],vertices[i].normal[1],vertices[i].normal[2],vertices[i].uv[0],vertices[i].uv[1]);
 		}
-		
-		putchar('\n');
-		
+		mmesh->setVAO(vertices, controlpointsnum, indices,indicesnum);
+#else
+		vertices = new Vertex[indicesnum];
 		for(i=0;i<indicesnum;i++)
 		{
 				vertices[i].position[0]=controlpoints[polygonvertices[i]][0];
 				vertices[i].position[1]=controlpoints[polygonvertices[i]][1];
 				vertices[i].position[2]=controlpoints[polygonvertices[i]][2];
-				
+		
 				if(normallayer)//확인해보니 normal의 갯수가 index갯수랑 똑같고 normallayer의 indexarray는 없더라
 				{
-				vertices[i].normal[0]=normallayer->GetDirectArray()[i][0];
-				vertices[i].normal[1]=normallayer->GetDirectArray()[i][1];
-				vertices[i].normal[2]=normallayer->GetDirectArray()[i][2];
+						vertices[i].normal[0]=normallayer->GetDirectArray()[i][0];
+						vertices[i].normal[1]=normallayer->GetDirectArray()[i][1];
+						vertices[i].normal[2]=normallayer->GetDirectArray()[i][2];
 				}
 				if(uvlayer)
 				{
-				vertices[i].uv[0]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][0];
-				vertices[i].uv[1]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][1];
+						vertices[i].uv[0]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][0];
+						vertices[i].uv[1]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][1];
 				}
-				printf("%d.\n   position %.2f %.2f %.2f\n   normal %.2f %.2f %.2f\n   uv %.2f %.2f\n",i,vertices[i].position[0],vertices[i].position[1],vertices[i].position[2],vertices[i].normal[0],vertices[i].normal[1],vertices[i].normal[2],vertices[i].uv[0],vertices[i].uv[1]);
+				//printf("%d.\n   position %.2f %.2f %.2f\n   normal %.2f %.2f %.2f\n   uv %.2f %.2f\n",i,vertices[i].position[0],vertices[i].position[1],vertices[i].position[2],vertices[i].normal[0],vertices[i].normal[1],vertices[i].normal[2],vertices[i].uv[0],vertices[i].uv[1]);
 		}
-		
-		mmesh = new myMesh();
 		mmesh->setVAO(vertices, indicesnum, NULL,0);
-		
+		 
+#endif
+
 		retnode->setMesh(mmesh);
 		return retnode;
 }
@@ -175,6 +215,7 @@ mynode* getNodeFromFBXpath(char* path)
 					myrootnode->addNode( tmpmynode );
 			}
 		}
+		
 		
 		return myrootnode;
 	}

@@ -6,6 +6,7 @@
 #include "materialProperties.h"
 #include "Vertex.h"
 #include "myshader.h"
+#include "myprogrammer.h"
 
 myMesh::myMesh()
 {
@@ -41,8 +42,12 @@ int myMesh::render()
 		//텍스쳐들 입혀준다.
 		for(itor = texunitpairs.begin(); itor !=texunitpairs.end(); itor++)
 		{
+				//glUniform1i(lfUNIitex, (*itor)->unit);
+				//unit에 GL_TEXTURE0를 빼주는 이유는 GL_TEXTURE0 -> 0 GL_TEXTURE1 -> 1 이런식으로되야하기때문
+				glUniform1i(myprogrammer::currentlyRunningInfo->ltex,(*itor)->unit - GL_TEXTURE0);
 				glActiveTexture((*itor)->unit);
 				glBindTexture(GL_TEXTURE_2D, (*itor)->texid );
+				printf("activating unit : %d     texid : %d\n",(*itor)->unit - GL_TEXTURE0,(*itor)->texid);
 		}
 
 		glBindVertexArrayAPPLE(vao);
@@ -56,6 +61,7 @@ int myMesh::render()
 				glDrawArrays(GL_TRIANGLES,0,numVertices);
 		}
 		glBindVertexArrayAPPLE(0);
+
 		return 0;
 }
 

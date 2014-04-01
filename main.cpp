@@ -27,9 +27,9 @@ const int winwidth = 2048;
 const int winheight = 512;
 const float winangle = 45;
 const float winnear = 1;
-const float winfar = 500;
-static float eyepos[3] = {0,6,15};
-static float lookat[3] = {0,1,0};
+const float winfar = 2000;
+static float eyepos[3] = {1,100,250};
+static float lookat[3] = {0,100,0};
 
 static int beziersmoothness = 100;
 static int pointnum=20;
@@ -86,6 +86,7 @@ static myMesh* meshPlane;
 
 //fbxthings...
 static mynode* box;
+static GLuint fbxtexid;
 static MaterialProperties boxmat =
 {
 		{0.6f,0.2f,0.9f,1},
@@ -336,7 +337,7 @@ void display()
 		
 		update();
 		
-		glClearColor(0,0,0,1);
+		glClearColor(0.1f,0.5f,0.2f,1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		     // Clear Screen and Depth Buffer
 		glLoadIdentity();
 		
@@ -403,16 +404,30 @@ void display()
 		 }
 		 glPopMatrix();
 		 */
+		
+		
 		//render box....
-		glUseProgram( shaderCheckProgram);
+		//puts("\n\nstarting render fbx hierarchy......");
+
+		
+		//glUseProgram(shaderTexUnlitProgram);
+		programs.useProgram(shaderTexUnlitProgram);
+		
+		glUniform1i(lfUNIitex, 0);
 		glPushMatrix();
-		glTranslatef(0,1,0);
+		glRotatef(-90,1,0,0);
+		
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, fbxtexid );
+		
 		box->render();
 		glPopMatrix();
+		//puts("\nrender fbx hierarchy end......");
+		
 		
 		
 		//render plane....
-		glUseProgram(shaderTexUnlitProgram);
+		//glUseProgram(shaderTexUnlitProgram);
 		
 		//glProgramUniform1i((GLuint)shaderTexUnlitProgram, lfUNIitex, 0);
 		glUniform1i(lfUNIitex, 0);
@@ -420,7 +435,7 @@ void display()
 		glTranslatef(0,0,0);
 		glColor3f(0.1f, 0.4f, 0.1f);
 		
-		meshPlane->render();
+		//meshPlane->render();
 		
 		glPopMatrix();
 		
@@ -428,7 +443,8 @@ void display()
 		
 		
 		//render objects with light rpogram
-		glUseProgram(shaderLightprogram);
+		//glUseProgram(shaderLightprogram);
+		programs.useProgram(shaderLightprogram);
 		
 		glUniform3f(lfUNIv3eyepos, eyepos[0], eyepos[1], eyepos[2]);
 		glUniform3f(lfUNIv3spherecenter, 0,0,-10);
@@ -437,7 +453,7 @@ void display()
 		glPushMatrix();
 		glTranslatef(7,sphereradius*2,0.0f);
 		glRotatef(sinf(rotation*0.1)*260,0,1,0);
-		meshSphere->render();
+		//meshSphere->render();
 		glPopMatrix();
 		
 		
@@ -549,6 +565,8 @@ void initialize ()
 		 if(glewIsSupported("GL_VERSION_2_0"))
 		 puts("ready for opengl 2");
 		 */
+		
+		printf("\n\n\n\ngl_texture0 is.... %d %d\n\n\n\n", GL_TEXTURE0, GL_TEXTURE1);
 		glMatrixMode(GL_PROJECTION);												// select projection matrix
 		glViewport(0, 0, winwidth, winheight);									// set the viewport
 		glMatrixMode(GL_PROJECTION);												// set matrix mode
@@ -636,9 +654,10 @@ void initialize ()
 		char lightfshadername[] = "light.frag";
 		shaderLightprogram = programs.makeAndManageProgram(lightvshadername,lightfshadername);
 		
+		/*
 		char lightProgramuniformeyeposname[] = "eyepos";
 		lfUNIv3eyepos = glGetUniformLocation (shaderLightprogram, lightProgramuniformeyeposname);
-		
+		*/
 		//reduced vertex sphere.....
 		unsigned int pnum;
 		unsigned int inum;
@@ -659,7 +678,7 @@ void initialize ()
 		char texunlitfshadername[] = "texunlit.frag";
 		shaderTexUnlitProgram = programs.makeAndManageProgram(texunlitvshadername,texunlitfshadername);
 		
-		lfUNIitex = glGetUniformLocation(shaderTexUnlitProgram, "tex");
+		//lfUNIitex = glGetUniformLocation(shaderTexUnlitProgram, "tex");
 		
 		//이 아랫놈은 3.0부터 가능한거
 		//glProgramUniform1i((GLuint)shaderTexUnlitProgram, (GLint)lfUNIitex, (GLint)0);
@@ -676,9 +695,14 @@ void initialize ()
 		
 		printOpenGLError();
 		
-		char bottomfbxfilename[] = "box.FBX";
-		
+		//fbx.....
+		char fbxtexname[] = "bodydiffuse.png";
+		fbxtexid = makeTexture(fbxtexname,NULL,NULL);
+		char bottomfbxfilename[] = "gamev_girl_base.FBX";
 		box = getNodeFromFBXpath(bottomfbxfilename);
+		box->getChildAt(0)->mesh->setTexidByPath("hairdiffuse.png", GL_TEXTURE2);
+		box->getChildAt(1)->mesh->setTexidByPath("facediffuse.png", GL_TEXTURE3);
+		box->getChildAt(2)->mesh->setTexidByPath("footdiffuse.png", GL_TEXTURE4);
 		
 		puts("init end");
 		
