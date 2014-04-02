@@ -28,6 +28,8 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		int polygoncnt=0;
 		int polygonedgecnt=0;
 		
+		int tmppolygonindex;
+		int tmpvertexindex;
 		if(fbxnode->GetNodeAttribute()->GetAttributeType() != FbxNodeAttribute::eMesh)
 		{
 				puts("not mesh...");
@@ -95,17 +97,21 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		controlpointsnum = fmesh->GetControlPointsCount();
 		controlpoints = fmesh->GetControlPoints();
 		
+		/*
 		puts("vertices...");
 		for(i=0;i<controlpointsnum;i++)
 		{
 				printf("(%.2f %.2f %.2f)\n",controlpoints[i][0],controlpoints[i][1],controlpoints[i][2]);
 		}
 		puts("indices...");
+		
+		
 		for(i=0;i<indicesnum;i+=4)
 		{
 				//printf("(%2d %2d %2d %2d)\n",polygonvertices[i/4],polygonvertices[i/4+1],polygonvertices[i/4+2],polygonvertices[i/4+3]);
 				printf("(%2d %2d %2d %2d)\n",fmesh->GetPolygonVertex(i/4,0),fmesh->GetPolygonVertex(i/4,1),fmesh->GetPolygonVertex(i/4,2),fmesh->GetPolygonVertex(i/4,3));
 		}
+		*/
 		
 		polygoncnt = fmesh->GetPolygonCount();
 		polygonedgecnt = indicesnum/polygoncnt;
@@ -176,9 +182,11 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		vertices = new Vertex[indicesnum];
 		for(i=0;i<indicesnum;i++)
 		{
-				vertices[i].position[0]=controlpoints[ fmesh->GetPolygonVertex(i/polygonedgecnt,i%polygonedgecnt) ][0];
-				vertices[i].position[1]=controlpoints[polygonvertices[i]][1];
-				vertices[i].position[2]=controlpoints[polygonvertices[i]][2];
+				tmppolygonindex = i/polygonedgecnt;
+				tmpvertexindex = i%polygonedgecnt;
+				vertices[i].position[0]=controlpoints[ fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex) ][0];
+				vertices[i].position[1]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][1];
+				vertices[i].position[2]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][2];
 		
 				if(normallayer)//확인해보니 normal의 갯수가 index갯수랑 똑같고 normallayer의 indexarray는 없더라
 				{
@@ -192,7 +200,7 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 						//중요!!!!!! fbx에선 uv값에서 v가 1에서 뺀값으로 들어옴!!
 						vertices[i].uv[1]=1-uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][1];
 				}
-				printf("%d.\n   position %.2f %.2f %.2f\n   normal %.2f %.2f %.2f\n   uv %.2f %.2f\n",i,vertices[i].position[0],vertices[i].position[1],vertices[i].position[2],vertices[i].normal[0],vertices[i].normal[1],vertices[i].normal[2],vertices[i].uv[0],vertices[i].uv[1]);
+				//printf("%d.\n   position %.2f %.2f %.2f\n   normal %.2f %.2f %.2f\n   uv %.2f %.2f\n",i,vertices[i].position[0],vertices[i].position[1],vertices[i].position[2],vertices[i].normal[0],vertices[i].normal[1],vertices[i].normal[2],vertices[i].uv[0],vertices[i].uv[1]);
 		}
 		mmesh->setVAO(vertices, indicesnum, NULL,0);
 		 
