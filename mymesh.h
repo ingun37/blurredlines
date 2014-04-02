@@ -32,7 +32,7 @@ class myMesh
 		std::list<texidUnitPair*> texunitpairs;
 		int drawOption;
 public:
-		enum eDrawOption{ eTRIANGLES=1, eQUADS=2};
+		enum eDrawOption{ eTRIANGLES=1, eTRIANGLESTRIP=2, eQUADS=4};
 		
 		
 		unsigned int getVnum();

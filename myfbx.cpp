@@ -5,7 +5,7 @@
 #define safedestroy(p) {if(p){p->Destroy();} p=NULL;}
 
 //#define useibo
-mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
+mynode* getMyNodeFromFBXNode(FbxNode* fbxnode, FbxManager* manager)
 {
 		int i;
 		mynode* retnode=NULL;
@@ -13,9 +13,10 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		mynode* tmpmynode=NULL;
 		myMesh* mmesh=NULL;
 		FbxMesh* fmesh=NULL;
-		
+		FbxMesh* tmpfmesh = NULL;
+		FbxGeometryConverter* triangulator=NULL;
 		int indicesnum;
-		int* polygonvertices=NULL;
+
 		unsigned short* indices=NULL;
 		
 		int controlpointsnum;
@@ -50,7 +51,7 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 				tmpfbxnode = fbxnode->GetChild(i);
 				if(tmpfbxnode)
 				{
-						tmpmynode = getMyNodeFromFBXNode(tmpfbxnode);
+						tmpmynode = getMyNodeFromFBXNode(tmpfbxnode, manager);
 						if(tmpmynode)
 								retnode->addNode( tmpmynode );
 				}
@@ -58,6 +59,38 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		
 		//메쉬받아온다.
 		fmesh = fbxnode->GetMesh();
+		
+		
+		//인덱스...
+		indicesnum = fmesh->GetPolygonVertexCount();
+		polygoncnt = fmesh->GetPolygonCount();
+		polygonedgecnt = 3;
+		//triangulation... 왜냐하면 gl_triangles로 렌더링해야하니깐.
+		if(!fmesh->IsTriangleMesh() )
+		{
+				//모든폴리곤이 사각형이면 걍 GL_QUADS로 렌더링하믄되므로 패쓰
+				if(indicesnum == polygoncnt*4)
+				{
+						polygonedgecnt = 4;
+				}
+				else
+				{
+						tmpfmesh = fmesh;
+						triangulator = new FbxGeometryConverter(manager);
+						fmesh = triangulator->TriangulateMesh(tmpfmesh);
+						delete triangulator;
+						
+						//triangulate했으니 인덱스랑 폴리곤정보들을 다시받아온다.
+						indicesnum = fmesh->GetPolygonVertexCount();
+						polygoncnt = fmesh->GetPolygonCount();
+				}
+		}
+		//버텍스...
+		controlpointsnum = fmesh->GetControlPointsCount();
+		controlpoints = fmesh->GetControlPoints();
+		
+		printf("polygon count : %d polygonedgecnt : %d indexnum : %d istrianglemesh? : %d\n",polygoncnt,polygonedgecnt, indicesnum, fmesh->IsTriangleMesh());
+		
 		
 		
 		//노말이랑 uv레이어 받아옴...
@@ -89,13 +122,7 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		}
 		
 		
-		//인덱스...
-		indicesnum = fmesh->GetPolygonVertexCount();
-		polygonvertices = fmesh->GetPolygonVertices();
 		
-		//버텍스...
-		controlpointsnum = fmesh->GetControlPointsCount();
-		controlpoints = fmesh->GetControlPoints();
 		
 		/*
 		puts("vertices...");
@@ -108,15 +135,11 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		
 		for(i=0;i<indicesnum;i+=4)
 		{
-				//printf("(%2d %2d %2d %2d)\n",polygonvertices[i/4],polygonvertices[i/4+1],polygonvertices[i/4+2],polygonvertices[i/4+3]);
 				printf("(%2d %2d %2d %2d)\n",fmesh->GetPolygonVertex(i/4,0),fmesh->GetPolygonVertex(i/4,1),fmesh->GetPolygonVertex(i/4,2),fmesh->GetPolygonVertex(i/4,3));
 		}
 		*/
 		
-		polygoncnt = fmesh->GetPolygonCount();
-		polygonedgecnt = indicesnum/polygoncnt;
 		
-		printf("polygon count : %d polygonedgecnt : %d/%d=%d\n",polygoncnt,indicesnum,polygoncnt,polygonedgecnt);
 		
 		//변의 갯수에 따라...
 		if(polygonedgecnt == 3)
@@ -132,51 +155,9 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 				//예외처리...
 		}
 		
-		/*
-		 puts("uv indices and polygon indices");
-		 for (i=0; i<indicesnum; i++)
-		 {
-		 printf("%d ",uvlayer->GetIndexArray()[i]);
-		 }
-		 
-		 putchar('\n');
-		 for (i=0; i<indicesnum; i++)
-		 {
-		 printf("%d ",polygonvertices[i]);
-		 }
-		 
-		 putchar('\n');
-		 */
 		
 #ifdef useibo
-		indices = new unsigned short[indicesnum];
-		
-		for(i=0;i<indicesnum;i++)
-		{
-				indices[i] = polygonvertices[i];
-		}
-		
-		vertices = new Vertex[controlpointsnum];
-		for(i=0;i<controlpointsnum;i++)
-		{
-				vertices[i].position[0]=controlpoints[i][0];
-				vertices[i].position[1]=controlpoints[i][1];
-				vertices[i].position[2]=controlpoints[i][2];
-				
-				if(normallayer)//확인해보니 normal의 갯수가 index갯수랑 똑같고 normallayer의 indexarray는 없더라
-				{
-						vertices[i].normal[0]=normallayer->GetDirectArray()[i][0];
-						vertices[i].normal[1]=normallayer->GetDirectArray()[i][1];
-						vertices[i].normal[2]=normallayer->GetDirectArray()[i][2];
-				}
-				if(uvlayer)
-				{
-						vertices[i].uv[0]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][0];
-						vertices[i].uv[1]=1-uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][1];
-				}
-				//printf("%d.\n   position %.2f %.2f %.2f\n   normal %.2f %.2f %.2f\n   uv %.2f %.2f\n",i,vertices[i].position[0],vertices[i].position[1],vertices[i].position[2],vertices[i].normal[0],vertices[i].normal[1],vertices[i].normal[2],vertices[i].uv[0],vertices[i].uv[1]);
-		}
-		mmesh->setVAO(vertices, controlpointsnum, indices,indicesnum);
+		//여기는 ...미완성 쓸일도없을듯
 #else
 		//fmesh->GetPolygonVertex(i/4,0)
 		vertices = new Vertex[indicesnum];
@@ -184,7 +165,7 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode)
 		{
 				tmppolygonindex = i/polygonedgecnt;
 				tmpvertexindex = i%polygonedgecnt;
-				vertices[i].position[0]=controlpoints[ fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex) ][0];
+				vertices[i].position[0]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][0];
 				vertices[i].position[1]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][1];
 				vertices[i].position[2]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][2];
 		
@@ -260,7 +241,7 @@ mynode* getNodeFromFBXpath(char* path)
 			tmpfbxnode = rootnode->GetChild(i);
 			if(tmpfbxnode)
 			{
-				tmpmynode = getMyNodeFromFBXNode(tmpfbxnode);
+				tmpmynode = getMyNodeFromFBXNode(tmpfbxnode, sdkmanager);
 				if(tmpmynode)
 					myrootnode->addNode( tmpmynode );
 			}

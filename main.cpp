@@ -28,7 +28,7 @@ const int winheight = 512;
 const float winangle = 45;
 const float winnear = 1;
 const float winfar = 2000;
-static float eyepos[3] = {2,100,200};
+static float eyepos[3] = {200,100,0};
 static float lookat[3] = {0,100,0};
 
 static int beziersmoothness = 100;

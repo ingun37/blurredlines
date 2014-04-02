@@ -141,7 +141,9 @@ int myMesh::setDrawOption(eDrawOption op)
 				case eTRIANGLES:
 				drawOption = GL_TRIANGLES;
 				break;
-				
+				case eTRIANGLESTRIP:
+				drawOption = GL_TRIANGLE_STRIP;
+				break;
 				case eQUADS:
 				drawOption = GL_QUADS;
 				break;

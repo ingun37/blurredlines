@@ -36,7 +36,7 @@ int mynode::render()
 		
 		for(i=0;i<childnodes.size();i++)
 		{
-				//				if(i==1)
+				//								if(i==5)
 				childnodes[i]->render();
 		}
 		
