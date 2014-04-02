@@ -28,7 +28,7 @@ const int winheight = 512;
 const float winangle = 45;
 const float winnear = 1;
 const float winfar = 2000;
-static float eyepos[3] = {1,100,250};
+static float eyepos[3] = {2,100,200};
 static float lookat[3] = {0,100,0};
 
 static int beziersmoothness = 100;
@@ -86,7 +86,7 @@ static myMesh* meshPlane;
 
 //fbxthings...
 static mynode* box;
-static GLuint fbxtexid;
+
 static MaterialProperties boxmat =
 {
 		{0.6f,0.2f,0.9f,1},
@@ -417,8 +417,6 @@ void display()
 		glPushMatrix();
 		glRotatef(-90,1,0,0);
 		
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, fbxtexid );
 		
 		box->render();
 		glPopMatrix();
@@ -696,13 +694,16 @@ void initialize ()
 		printOpenGLError();
 		
 		//fbx.....
-		char fbxtexname[] = "bodydiffuse.png";
-		fbxtexid = makeTexture(fbxtexname,NULL,NULL);
+		//char fbxtexname[] = "bodydiffuse.png";
+		//fbxtexid = makeTexture(fbxtexname,NULL,NULL);
 		char bottomfbxfilename[] = "gamev_girl_base.FBX";
 		box = getNodeFromFBXpath(bottomfbxfilename);
 		box->getChildAt(0)->mesh->setTexidByPath("hairdiffuse.png", GL_TEXTURE2);
 		box->getChildAt(1)->mesh->setTexidByPath("facediffuse.png", GL_TEXTURE3);
 		box->getChildAt(2)->mesh->setTexidByPath("footdiffuse.png", GL_TEXTURE4);
+		box->getChildAt(3)->mesh->setTexidByPath("handdiffuse.png", GL_TEXTURE5);
+		box->getChildAt(4)->mesh->setTexidByPath("bodydiffuse.png", GL_TEXTURE6);
+		box->getChildAt(5)->mesh->setTexidByPath("bodydiffuse.png", GL_TEXTURE7);
 		
 		puts("init end");
 		

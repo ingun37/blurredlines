@@ -3,6 +3,7 @@
 
 #include <list>
 
+
 typedef struct MaterialPropertiesraw MaterialProperties;
 typedef struct Vertexraw Vertex;
 
@@ -29,13 +30,17 @@ class myMesh
 		MaterialProperties* materialproperties;
 		
 		std::list<texidUnitPair*> texunitpairs;
+		int drawOption;
 public:
-
+		enum eDrawOption{ eTRIANGLES=1, eQUADS=2};
+		
+		
 		unsigned int getVnum();
 		unsigned int getInum(	);
 		unsigned int getVAO();
 
 		int setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum);
+		int setDrawOption(eDrawOption op);
 		//int setShader(char* vshadername, char* fshadername);
 		
 		int render();

@@ -15,6 +15,7 @@ myMesh::myMesh()
 		materialproperties = (MaterialProperties*)malloc(sizeof(MaterialProperties));
 		memset(materialproperties, 0, sizeof(MaterialProperties));
 
+		drawOption=0;
 		vshader = 0;
 		fshader = 0;
 		ibo = 0;
@@ -47,18 +48,18 @@ int myMesh::render()
 				glUniform1i(myprogrammer::currentlyRunningInfo->ltex,(*itor)->unit - GL_TEXTURE0);
 				glActiveTexture((*itor)->unit);
 				glBindTexture(GL_TEXTURE_2D, (*itor)->texid );
-				printf("activating unit : %d     texid : %d\n",(*itor)->unit - GL_TEXTURE0,(*itor)->texid);
+				//printf("activating unit : %d     texid : %d\n",(*itor)->unit - GL_TEXTURE0,(*itor)->texid);
 		}
 
 		glBindVertexArrayAPPLE(vao);
 		if(ibo > 0)
 		{
-				glDrawElements(GL_TRIANGLES, numIndices * sizeof(short), GL_UNSIGNED_SHORT, NULL);
+				glDrawElements(drawOption, numIndices * sizeof(short), GL_UNSIGNED_SHORT, NULL);
 		}
 		else
 		{
 
-				glDrawArrays(GL_TRIANGLES,0,numVertices);
+				glDrawArrays(drawOption,0,numVertices);
 		}
 		glBindVertexArrayAPPLE(0);
 
@@ -131,6 +132,21 @@ int myMesh::setVAO(Vertex* pv, int vnum, unsigned short* pi, int inum)
 		glBindVertexArrayAPPLE(0);
 		
 		return 0;
+}
+
+int myMesh::setDrawOption(eDrawOption op)
+{
+		switch (op)
+		{
+				case eTRIANGLES:
+				drawOption = GL_TRIANGLES;
+				break;
+				
+				case eQUADS:
+				drawOption = GL_QUADS;
+				break;
+				
+		}
 }
 
 void myMesh::release()

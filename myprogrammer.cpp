@@ -30,14 +30,14 @@ int myprogrammer::useProgram(int program)
 		
 		if(currentlyRunningInfo)
 		{
-				printf("using program : %d\n",program);
+				//printf("using program : %d\n",program);
 				currentlyRunningProgram = program;
-				printf("currently running program info\nltex : %d\nleyepos : %d\nv : %d\nf : %d\n", currentlyRunningInfo->ltex, currentlyRunningInfo->leyepos, currentlyRunningInfo->v, currentlyRunningInfo->f);
+				//printf("currently running program info\nltex : %d\nleyepos : %d\nv : %d\nf : %d\n", currentlyRunningInfo->ltex, currentlyRunningInfo->leyepos, currentlyRunningInfo->v, currentlyRunningInfo->f);
 				glUseProgram(program);
 		}
 		else
 		{
-				printf("program : %d does not exists\n",program);
+				//printf("program : %d does not exists\n",program);
 		}
 }
 
