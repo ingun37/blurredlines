@@ -29,8 +29,10 @@ int mynode::render()
 		glPushMatrix();
 		
 		//printf("\n local pos is... %f %f %f\n", localpos[0], localpos[1], localpos[2]);
-		glTranslatef(localpos[0], localpos[2], localpos[1]);
-		
+
+
+		glTranslatef(localpos[0], localpos[1], localpos[2]);
+		//glTranslatef(0, 0, 0);
 		if(mesh)
 				mesh->render();
 		
@@ -39,7 +41,7 @@ int mynode::render()
 				//								if(i==5)
 				childnodes[i]->render();
 		}
-		
+
 		glPopMatrix();
 
 		return 0;

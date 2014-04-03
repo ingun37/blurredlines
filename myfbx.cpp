@@ -31,19 +31,21 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode, FbxManager* manager)
 		
 		int tmppolygonindex;
 		int tmpvertexindex;
+		
 		if(fbxnode->GetNodeAttribute()->GetAttributeType() != FbxNodeAttribute::eMesh)
 		{
 				puts("not mesh...");
 				return NULL;
 		}
 		
-		puts("\nmaking new mesh node....");
+		printf("\nmaking new %s mesh node....\n",fbxnode->GetName());
 		retnode=new mynode();
 		mmesh = new myMesh();
 		
 		localpos = fbxnode->LclTranslation.Get();
 		printf("local pos is..... %f %f %f\n", localpos[0], localpos[1], localpos[2]);
-		retnode->setLocalPos(localpos[0], localpos[1], localpos[2]);
+		//중요 fbx에서 z는 -로...
+		retnode->setLocalPos(localpos[0], localpos[1], -localpos[2]);
 		
 		//자식 노드 재귀함수로 집어넣기..
 		for(i=0;i < fbxnode->GetChildCount();i++)
@@ -166,8 +168,8 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode, FbxManager* manager)
 				tmppolygonindex = i/polygonedgecnt;
 				tmpvertexindex = i%polygonedgecnt;
 				vertices[i].position[0]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][0];
-				vertices[i].position[1]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][1];
-				vertices[i].position[2]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][2];
+				vertices[i].position[1]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][2];
+				vertices[i].position[2]=controlpoints[fmesh->GetPolygonVertex(tmppolygonindex,tmpvertexindex)][1];
 		
 				if(normallayer)//확인해보니 normal의 갯수가 index갯수랑 똑같고 normallayer의 indexarray는 없더라
 				{
@@ -178,8 +180,12 @@ mynode* getMyNodeFromFBXNode(FbxNode* fbxnode, FbxManager* manager)
 				if(uvlayer)
 				{
 						vertices[i].uv[0]=uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][0];
+						//vertices[i].uv[0]=uvlayer->GetDirectArray()[fmesh->GetTextureUVIndex(tmppolygonindex,tmpvertexindex)][0];
 						//중요!!!!!! fbx에선 uv값에서 v가 1에서 뺀값으로 들어옴!!
 						vertices[i].uv[1]=1-uvlayer->GetDirectArray()[uvlayer->GetIndexArray()[i]][1];
+						//vertices[i].uv[0]=uvlayer->GetDirectArray()[fmesh->GetTextureUVIndex(tmppolygonindex,tmpvertexindex)][1];
+						if(fmesh->GetTextureUVIndex(tmppolygonindex,tmpvertexindex) != uvlayer->GetIndexArray()[i])
+								puts("˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚differ differ differ GetTExtureuvindex & getindexarray˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚˚");
 				}
 				//printf("%d.\n   position %.2f %.2f %.2f\n   normal %.2f %.2f %.2f\n   uv %.2f %.2f\n",i,vertices[i].position[0],vertices[i].position[1],vertices[i].position[2],vertices[i].normal[0],vertices[i].normal[1],vertices[i].normal[2],vertices[i].uv[0],vertices[i].uv[1]);
 		}
@@ -235,7 +241,7 @@ mynode* getNodeFromFBXpath(char* path)
 		printf("root node's child num : %d\n",rootnode->GetChildCount());
 		
 		myrootnode = new mynode();
-			
+		
 		for(i=0;i < rootnode->GetChildCount();i++)
 		{
 			tmpfbxnode = rootnode->GetChild(i);

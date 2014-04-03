@@ -22,13 +22,17 @@
 //#define PI 3.141592
 #define D360 (PI*2)
 #define A2R(a) (D360*(((float)a)/360))
+GLFWwindow *window = NULL;
 
 const int winwidth = 2048;
 const int winheight = 512;
 const float winangle = 45;
 const float winnear = 1;
 const float winfar = 2000;
-static float eyepos[3] = {200,100,0};
+static float eyedis = 300;
+static float anghori=0, angverti=0;
+
+static float eyepos[3] = {300,100,0};
 static float lookat[3] = {0,100,0};
 
 static int beziersmoothness = 100;
@@ -201,6 +205,8 @@ void drawBezier(p2d* bezierpoints, unsigned int num, int smooth)
 		glEnd();
 }
 
+static float cursorPrevX = -9999;
+static float cursorPrevY = -9999;
 
 void update()
 {
@@ -209,6 +215,8 @@ void update()
 		int tmp = -1;
 		float tmpf;
 		p2d tmpp, tmpp2;
+		double currX;
+		double currY;
 #ifdef renderBezier
 		{
 				for (i=0;i<exlinesnum;i++)
@@ -306,6 +314,20 @@ void update()
 		
 		clockcurrent = clock();
 		
+		
+		
+		glfwGetCursorPos(window, &currX, &currY);
+		if( cursorPrevX != -9999 && cursorPrevY != -9999)
+		{
+				anghori += (currX - cursorPrevX) * 0.1f;
+				angverti += (currY - cursorPrevY) * 0.1f;
+		}
+		cursorPrevX = currX;
+		cursorPrevY = currY;
+		
+		eyepos[0] = eyedis * cosf(anghori);
+		eyepos[2] = eyedis * sinf(anghori);
+		eyepos[1] = eyedis * sinf(angverti);
 }
 
 void drawfinish()
@@ -415,9 +437,8 @@ void display()
 		
 		glUniform1i(lfUNIitex, 0);
 		glPushMatrix();
-		glRotatef(-90,1,0,0);
 		
-		
+
 		box->render();
 		glPopMatrix();
 		//puts("\nrender fbx hierarchy end......");
@@ -698,10 +719,11 @@ void initialize ()
 		//fbxtexid = makeTexture(fbxtexname,NULL,NULL);
 		char bottomfbxfilename[] = "gamev_girl_base.FBX";
 		box = getNodeFromFBXpath(bottomfbxfilename);
+		
 		box->getChildAt(0)->mesh->setTexidByPath("hairdiffuse.png", GL_TEXTURE2);
 		box->getChildAt(1)->mesh->setTexidByPath("facediffuse.png", GL_TEXTURE3);
-		box->getChildAt(2)->mesh->setTexidByPath("footdiffuse.png", GL_TEXTURE4);
-		box->getChildAt(3)->mesh->setTexidByPath("handdiffuse.png", GL_TEXTURE5);
+		box->getChildAt(2)->mesh->setTexidByPath("bodydiffuse.png", GL_TEXTURE4);
+		box->getChildAt(3)->mesh->setTexidByPath("bodydiffuse.png", GL_TEXTURE5);
 		box->getChildAt(4)->mesh->setTexidByPath("bodydiffuse.png", GL_TEXTURE6);
 		box->getChildAt(5)->mesh->setTexidByPath("bodydiffuse.png", GL_TEXTURE7);
 		
@@ -743,11 +765,22 @@ void terminate()
 
 }
 
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+		if(key == GLFW_KEY_DOWN && action == GLFW_REPEAT)
+		{
+				eyedis += 4.f;
+		}
+		if(key == GLFW_KEY_UP && action == GLFW_REPEAT)
+		{
+				eyedis -= 4.f;
+		}
+}
 
 int main(int argc, char **argv)
 {
 
-		GLFWwindow *window;
+		
 		if(!glfwInit())
 		{
 				return -1;
@@ -761,7 +794,7 @@ int main(int argc, char **argv)
 		}
 		
 		glfwMakeContextCurrent(window);
-		
+		glfwSetKeyCallback(window, key_callback);
 		initialize();
 		while(!glfwWindowShouldClose(window))
 		{
